@@ -1,3 +1,4 @@
+import threading
 from typing import Union
 import torch
 import time
@@ -5,6 +6,7 @@ import time
 # Constants
 NUM_OF_DEVICES = torch.cuda.device_count()
 DEVICE_AVAILABLE_LIST = [True for _ in range(NUM_OF_DEVICES)]
+DEVICE_LIST_LOCK = threading.Lock()
 GET_AVAILABLE_DEVICE_TIMEOUT_SEC = 5
 AVAILABLE_DEVICE_POOLING_INTERVAL_SEC = 1
 CUDA_STR = "cuda:"
@@ -33,10 +35,11 @@ class DeviceManager(object):
     def acquire_device_timeout(self, timeout_sec: Union[int, None]) -> int:
         start_time = time.time()
         while timeout_sec is None or time.time() < (start_time + timeout_sec):
-            if self.is_device_available():
-                available_device_id = DEVICE_AVAILABLE_LIST.index(True)
-                self.acquire_device(available_device_id)
-                return available_device_id
+            with DEVICE_LIST_LOCK:
+                if self.is_device_available():
+                    available_device_id = DEVICE_AVAILABLE_LIST.index(True)
+                    self.acquire_device(available_device_id)
+                    return available_device_id
             time.sleep(AVAILABLE_DEVICE_POOLING_INTERVAL_SEC)
         raise NoAvailableDeviceTimeoutException("Timeout expired - Could not find available device")
 
@@ -49,10 +52,11 @@ class DeviceManager(object):
 
     @staticmethod
     def release_device(device_id: int) -> None:
-        if DEVICE_AVAILABLE_LIST[device_id]:
-            raise DeviceManagerException(f"Cannot set device_id: {device_id} to available. "
-                                         f"device already available")
-        DEVICE_AVAILABLE_LIST[device_id] = True
+        with DEVICE_LIST_LOCK:
+            if DEVICE_AVAILABLE_LIST[device_id]:
+                raise DeviceManagerException(f"Cannot set device_id: {device_id} to available. "
+                                             f"device already available")
+            DEVICE_AVAILABLE_LIST[device_id] = True
 
     @staticmethod
     def is_device_available():

@@ -2,6 +2,11 @@ import time
 import unittest
 import threading
 from device_manager import DeviceManager, NoAvailableDeviceTimeoutException
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(levelname)s, %(threadName)s, %(name)s, "%(message)s"',
+                    level=logging.DEBUG,
+                    datefmt='%Y-%m-%d, %H:%M:%S')
 
 
 class TestDeviceManager(unittest.TestCase):
@@ -36,9 +41,8 @@ class TestDeviceManager(unittest.TestCase):
     @staticmethod
     def acquire_device(timeout_sec: int = _DEFAULT_TIME_OUT_SEC_DEVICE_MANAGER,
                        device_hold_time_sec: int = _TIME_FOR_DEVICE_HOLD):
-        thread_num = threading.get_ident()
-        print(f"starting thread_num: {thread_num}")
-        with DeviceManager(timeout_sec=timeout_sec) as d:
-            print(f"thread_num: {thread_num}, Acquired Device {d}")
+        logging.debug(f"Trying to get device")
+        with DeviceManager(timeout_sec=timeout_sec) as device:
+            logging.debug(f"Acquired Device {device}")
             time.sleep(device_hold_time_sec)
-            print(f"thread_num: {thread_num}, Releasing Device: {d}")
+            logging.debug(f"Releasing Device: {device}")
