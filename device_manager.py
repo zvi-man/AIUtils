@@ -1,0 +1,59 @@
+from typing import Union
+import torch
+import time
+
+# Constants
+NUM_OF_DEVICES = torch.cuda.device_count()
+DEVICE_AVAILABLE_LIST = [True for _ in range(NUM_OF_DEVICES)]
+GET_AVAILABLE_DEVICE_TIMEOUT_SEC = 5
+AVAILABLE_DEVICE_POOLING_INTERVAL_SEC = 1
+CUDA_STR = "cuda:"
+
+
+class NoAvailableDeviceTimeoutException(Exception):
+    pass
+
+
+class DeviceManagerException(Exception):
+    pass
+
+
+class DeviceManager(object):
+    def __init__(self, timeout_sec: Union[int, None] = GET_AVAILABLE_DEVICE_TIMEOUT_SEC):
+        self.timeout_sec = timeout_sec
+        self.device_id = None
+
+    def __enter__(self):
+        self.device_id = self.acquire_device_timeout(self.timeout_sec)
+        return torch.device(CUDA_STR + str(self.device_id))
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release_device(self.device_id)
+
+    def acquire_device_timeout(self, timeout_sec: Union[int, None]) -> int:
+        start_time = time.time()
+        while timeout_sec is None or time.time() < (start_time + timeout_sec):
+            if self.is_device_available():
+                available_device_id = DEVICE_AVAILABLE_LIST.index(True)
+                self.acquire_device(available_device_id)
+                return available_device_id
+            time.sleep(AVAILABLE_DEVICE_POOLING_INTERVAL_SEC)
+        raise NoAvailableDeviceTimeoutException("Timeout expired - Could not find available device")
+
+    @staticmethod
+    def acquire_device(device_id: int) -> None:
+        if not DEVICE_AVAILABLE_LIST[device_id]:
+            raise DeviceManagerException(f"Cannot set device_id: {device_id} to not available. "
+                                         f"device already unavailable")
+        DEVICE_AVAILABLE_LIST[device_id] = False
+
+    @staticmethod
+    def release_device(device_id: int) -> None:
+        if DEVICE_AVAILABLE_LIST[device_id]:
+            raise DeviceManagerException(f"Cannot set device_id: {device_id} to available. "
+                                         f"device already available")
+        DEVICE_AVAILABLE_LIST[device_id] = True
+
+    @staticmethod
+    def is_device_available():
+        return any(DEVICE_AVAILABLE_LIST)
