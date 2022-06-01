@@ -108,6 +108,7 @@ class LabelledObject:
 
 class GtagBackEnd(object):
     def __init__(self, working_dir: str = GtagConfig.working_dir):
+        # TODO: add default label attribute
         self.idx: int = 0
         self.working_dir: str = working_dir
         self.total_num_of_files: int = 0
@@ -130,8 +131,8 @@ class GtagBackEnd(object):
         self.total_num_of_files = len(all_files)
         for file_name in all_files:
             labeled_file = LabelTrackedFile(file_name, self.working_dir)
-            self.unique_labels_set.add(get_label_from_file_name(labeled_file.file_name))
             if labeled_file.is_labeled:
+                self.unique_labels_set.add(get_label_from_file_name(labeled_file.file_name))
                 self.num_of_labeled_files += 1
             if labeled_file.obj_id not in obj_dict:
                 obj_dict[labeled_file.obj_id] = [labeled_file]
@@ -140,7 +141,7 @@ class GtagBackEnd(object):
         return obj_dict
 
     def next_object(self) -> bool:
-        if self.idx == len(self.obj_list):
+        if (self.idx + 1) == len(self.obj_list):
             return False
         self.idx += 1
         return True
@@ -165,6 +166,7 @@ class GtagBackEnd(object):
         return object_files_paths
 
     def move_current_object_to_garbage(self) -> None:
+        # TODO: add track of total num of files + num of labeled files
         for file_path in self.get_current_object_file_paths():
             move_file(file_path, GtagConfig.garbadge_dir)
         del self.obj_list[self.idx]
@@ -173,11 +175,17 @@ class GtagBackEnd(object):
         return self._get_current_object().label
 
     def set_current_object_label(self, label: str, subset_to_label: Optional[List[int]] = None) -> None:
+        if label != GtagConfig.default_label:
+            self.unique_labels_set.add(label)
+        # TODO: add track of num of labeled files
         current_object = self._get_current_object()
         current_object.label_object(label, subset_to_label)
 
     def unlabel_current_object(self) -> None:
-        self._get_current_object().unlabel_object()
+        current_object = self._get_current_object()
+        if current_object.label != GtagConfig.default_label:
+            self.unique_labels_set.remove(current_object.label)
+        current_object.unlabel_object()
 
     def get_num_unique_labels(self) -> int:
         return len(self.unique_labels_set)
