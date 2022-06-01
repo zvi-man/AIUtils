@@ -1,9 +1,10 @@
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List, Optional, Set, Dict
 import re
 
-from Tagometer.GtagConfig import GtagConfig
+from Tagometer.gtag_config import GtagConfig
 
 
 class GtagBackEndException(Exception):
@@ -109,22 +110,25 @@ class GtagBackEnd(object):
     def __init__(self, working_dir: str = GtagConfig.working_dir):
         self.idx: int = 0
         self.working_dir: str = working_dir
-        self.total_num_of_files: int = len(os.listdir(self.working_dir))
+        self.total_num_of_files: int = 0
         self.num_of_labeled_files: int = 0
         self.obj_list: List[LabelledObject] = []
         self.unique_labels_set: Set[str] = set()
-        self.init_obj_list()
+        self._init_obj_list()
 
-    def init_obj_list(self) -> None:
-        obj_dict = self.sort_files_by_object()
+    def _init_obj_list(self) -> None:
+        obj_dict = self._sort_files_by_object()
         for object_id, labeled_file_list in obj_dict.items():
             labeled_object = LabelledObject(object_id, labeled_file_list)
             self.obj_list.append(labeled_object)
         self.obj_list.sort(key=lambda x: x.id)
 
-    def sort_files_by_object(self) -> Dict[int, List[LabelTrackedFile]]:
+    def _sort_files_by_object(self) -> Dict[int, List[LabelTrackedFile]]:
         obj_dict = dict()
-        for file_name in os.listdir(self.working_dir):
+        all_files = [file_name for file_name in os.listdir(self.working_dir)
+                     if Path(file_name).suffix in GtagConfig.acceptable_file_types]
+        self.total_num_of_files = len(all_files)
+        for file_name in all_files:
             labeled_file = LabelTrackedFile(file_name, self.working_dir)
             self.unique_labels_set.add(get_label_from_file_name(labeled_file.file_name))
             if labeled_file.is_labeled:
@@ -147,21 +151,15 @@ class GtagBackEnd(object):
         self.idx -= 1
         return True
 
-    def get_current_object(self) -> LabelledObject:
+    def _get_current_object(self) -> LabelledObject:
         return self.obj_list[self.idx]
 
     def get_current_object_id(self) -> int:
-        return self.get_current_object().id
-
-    def get_current_object_file_names(self) -> List[str]:
-        object_file_names = []
-        for label_tracked_file in self.get_current_object().file_list:
-            object_file_names.append(label_tracked_file.file_name)
-        return object_file_names
+        return self._get_current_object().id
 
     def get_current_object_file_paths(self) -> List[str]:
         object_files_paths = []
-        for label_tracked_file in self.get_current_object().file_list:
+        for label_tracked_file in self._get_current_object().file_list:
             file_path = os.path.join(label_tracked_file.file_dir, label_tracked_file.file_name)
             object_files_paths.append(file_path)
         return object_files_paths
@@ -172,14 +170,18 @@ class GtagBackEnd(object):
         del self.obj_list[self.idx]
 
     def get_current_object_label(self) -> str:
-        return self.get_current_object().label
+        return self._get_current_object().label
 
     def set_current_object_label(self, label: str, subset_to_label: Optional[List[int]] = None) -> None:
-        current_object = self.get_current_object()
+        current_object = self._get_current_object()
         current_object.label_object(label, subset_to_label)
+
+    def unlabel_current_object(self) -> None:
+        self._get_current_object().unlabel_object()
 
     def get_num_unique_labels(self) -> int:
         return len(self.unique_labels_set)
 
     def get_num_objects(self) -> int:
         return len(self.obj_list)
+

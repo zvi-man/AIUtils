@@ -9,7 +9,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s, %(threadName)s, %(name)
                     datefmt='%Y-%m-%d, %H:%M:%S')
 
 
-class TestDeviceManager(unittest.TestCase):
+class TestDeviceManager(object):
     _DEFAULT_TIME_OUT_SEC_DEVICE_MANAGER = 5
     _TIME_FOR_DEVICE_HOLD = 3
     _LONG_DEVICE_HOLD_TIME_SEC = 6
