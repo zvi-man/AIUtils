@@ -126,7 +126,7 @@ class GtagBackEnd(object):
     def _sort_files_by_object(self) -> Dict[int, List[LabelTrackedFile]]:
         obj_dict = dict()
         all_files = [file_name for file_name in os.listdir(self.working_dir)
-                     if Path(file_name).suffix in GtagConfig.acceptable_file_types]
+                     if Path(file_name).suffix[1:] in GtagConfig.acceptable_file_types]
         self.total_num_of_files = len(all_files)
         for file_name in all_files:
             labeled_file = LabelTrackedFile(file_name, self.working_dir)

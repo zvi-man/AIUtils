@@ -10,6 +10,7 @@ from typing import List, Dict
 import os
 import pytest
 import logging
+import shutil
 
 from Tagometer.gtag_config import GtagConfig
 from Tagometer.gtag_backend import GtagBackEnd
@@ -52,12 +53,11 @@ class TestGtagBackEnd(object):
     def _create_working_dir(self):
         os.mkdir(self.WORKING_DIR)
         yield
-        os.rmdir(self.WORKING_DIR)
+        shutil.rmtree(self.WORKING_DIR)
 
     def test_init_success(self):
         init_working_dir(self.WORKING_DIR, self.BASIC_WORKING_DIR_STRUCTURE)
         gtag = GtagBackEnd(self.WORKING_DIR)
-        a = 1
 
     def test_browse_through_objects(self):
         pass
