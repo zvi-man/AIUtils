@@ -133,3 +133,4 @@ dmypy.json
 *.gz
 
 GeneralUtils/data/FashionMNIST/raw/
+GeneralUtils/runs
