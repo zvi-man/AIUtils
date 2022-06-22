@@ -1,41 +1,27 @@
-#############################################
-# Object detection via RTSP - YOLO - OpenCV
-# Author : Frank Schmitz   (Dec 11, 2018)
-# Website : https://www.github.com/zishor
-############################################
-
 import os
 import os.path
+from typing import Dict, List
+
 import cv2
 import argparse
 import numpy as np
 import imageio_ffmpeg as imageio
 import datetime
 
-ap = argparse.ArgumentParser()
-ap.add_argument('-i', '--input', required=False,
-                help='path to input image', default='sampledata/commuters.mp4')
-ap.add_argument('-o', '--outputfile', required=False,
-                help='filename for output video', default='output.mp4')
-ap.add_argument('-od', '--outputdir', required=False,
-                help='path to output folder', default='output')
-ap.add_argument('-fs', '--framestart', required=False,
-                help='start frame', default=0)
-ap.add_argument('-fl', '--framelimit', required=False,
-                help='number of frames to process (0 = all)', default=0)
-ap.add_argument('-c', '--config', required=False,
-                help='path to yolo config file', default='cfg/yolov3-tiny.cfg')
-ap.add_argument('-w', '--weights', required=False,
-                help='path to yolo pre-trained weights', default='yolov3-tiny.weights')
-ap.add_argument('-cl', '--classes', required=False,
-                help='path to text file containing class names', default='cfg/yolov3.txt')
-ap.add_argument('-ic', '--invertcolor', required=False,
-                help='invert RGB 2 BGR', default='False')
-ap.add_argument('-fpt', '--fpsthrottle', required=False,
-                help='skips (int) x frames in order to catch up with the stream for slow machines 1 = no throttle',
-                default=1)
-args = ap.parse_args()
-
+# Configs
+FRAMES_T = 1
+INVERT_COLOR = 'False'
+YOLO_CLASSES_PATH = 'cfg/yolov3.txt'
+YOLOV_WEIGHTS_PATH = 'yolov3.weights'
+YOLO_CFG_FILE_PATH = 'cfg/yolov3.cfg'
+FRAME_LIMIT = 0
+STARTFRAME = 0
+DEFAULT_LABEL_OUTPUT_PATH = 'output'
+DEFAULT_VIDEO_OUTPUT_PATH = 'output.mp4'
+DEFAULT_INPUT_PATH = 'sampledata/commuters.mp4'
+CLASSES_TO_EXTRACT = ['person', 'car']
+CLASSES_PATH = r'cfg/yolov3.txt'
+# Constants
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -153,43 +139,89 @@ def processvideo(file):
     writer.close()
 
 
-# Doing some Object Detection on a video
-classes = None
+def run_yolo_on_stream(input_path: str,
+                       objects_output_path: str,
+                       video_output_path: str,
+                       yolo_classes_path: str,
+                       frame_limit: int = 0) -> None:
+    # Doing some Object Detection on a video
+    class_int_to_str = get_classes(yolo_classes_path)
 
-with open(args.classes, 'r') as f:
-    classes = [line.strip() for line in f.readlines()]
-COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
+    COLORS = np.random.uniform(0, 255, size=(len(class_int_to_str), 3))
 
-if args.input.startswith('rtsp'):
+    if input_path.startswith('rtsp'):
 
-    cap = cv2.VideoCapture(args.input)
-    if int(args.framelimit) > 0:
-        writer = imageio.write_frames(args.outputfile, (int(cap.get(3)), int(cap.get(4))))
-        writer.send(None)
-    frame_counter = 0
-    while (True):
-        if int(args.framelimit) > 0 and frame_counter > int(args.framestart) + int(args.framelimit):
-            writer.close()
-            break
+        cap = cv2.VideoCapture(input_path)
+        if int(frame_limit) > 0:
+            writer = imageio.write_frames(args.outputfile, (int(cap.get(3)), int(cap.get(4))))
+            writer.send(None)
+        frame_counter = 0
+        while True:
+            if int(frame_limit) > 0 and frame_counter > int(args.framestart) + int(frame_limit):
+                writer.close()
+                break
 
-        if frame_counter % int(args.fpsthrottle) == 0:
-            ret, frame = cap.read()
-            if ret and frame_counter >= int(args.framestart):
-                print('Detecting objects in frame ' + str(frame_counter))
-                frame = detect(frame)
-                if int(args.framelimit) > 0:
-                    writer.send(frame)
+            if frame_counter % int(args.fpsthrottle) == 0:
+                ret, frame = cap.read()
+                if ret and frame_counter >= int(args.framestart):
+                    print('Detecting objects in frame ' + str(frame_counter))
+                    frame = detect(frame)
+                    if int(frame_limit) > 0:
+                        writer.send(frame)
+                else:
+                    print('Skipping frame ' + str(frame_counter))
             else:
-                print('Skipping frame ' + str(frame_counter))
-        else:
-            print('FPS throttling. Skipping frame ' + str(frame_counter))
-        frame_counter = frame_counter + 1
+                print('FPS throttling. Skipping frame ' + str(frame_counter))
+            frame_counter = frame_counter + 1
 
-else:
-    if os.path.isdir(args.input):
-        for dirpath, dirnames, filenames in os.walk(args.input):
-            for filename in [f for f in filenames if f.endswith(".mp4")]:
-                print('Processing video ' + os.path.join(dirpath, filename))
-                processvideo(os.path.join(dirpath, filename))
     else:
-        processvideo(os.path.join(args.input))
+        if os.path.isdir(input_path):
+            for dirpath, dirnames, filenames in os.walk(input_path):
+                for filename in [f for f in filenames if f.endswith(".mp4")]:
+                    print('Processing video ' + os.path.join(dirpath, filename))
+                    processvideo(os.path.join(dirpath, filename))
+        else:
+            processvideo(os.path.join(input_path))
+
+
+def get_args() -> argparse.ArgumentParser:
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-i', '--input', required=False,
+                    help='path to input image', default=DEFAULT_INPUT_PATH)
+    ap.add_argument('-o', '--outputfile', required=False,
+                    help='filename for output video', default=DEFAULT_VIDEO_OUTPUT_PATH)
+    ap.add_argument('-od', '--outputdir', required=False,
+                    help='path to output folder', default=DEFAULT_LABEL_OUTPUT_PATH)
+    ap.add_argument('-fs', '--framestart', required=False,
+                    help='start frame', default=STARTFRAME)
+    ap.add_argument('-fl', '--framelimit', required=False,
+                    help='number of frames to process (0 = all)', default=FRAME_LIMIT)
+    ap.add_argument('-c', '--config', required=False,
+                    help='path to yolo config file', default=YOLO_CFG_FILE_PATH)
+    ap.add_argument('-w', '--weights', required=False,
+                    help='path to yolo pre-trained weights', default=YOLOV_WEIGHTS_PATH)
+    ap.add_argument('-cl', '--classes', required=False,
+                    help='path to text file containing class names', default=YOLO_CLASSES_PATH)
+    ap.add_argument('-ic', '--invertcolor', required=False,
+                    help='invert RGB 2 BGR', default=INVERT_COLOR)
+    ap.add_argument('-fpt', '--fpsthrottle', required=False,
+                    help='skips (int) x frames in order to catch up with the stream for slow machines 1 = no throttle',
+                    default=FRAMES_TO_SKIP)
+    return ap.parse_args()
+
+
+def main_app():
+    args = get_args()
+    run_yolo_on_stream(input_path=args.input,
+                       frame_limit=args.framelimit,
+                       class_int_to_str=class_int_to_str)
+
+
+def get_classes(classes_path: str):
+    with open(classes_path, 'r') as f:
+        class_int_to_str = [line.strip() for line in f.readlines()]
+    return class_int_to_str
+
+
+if __name__ == '__main__':
+    main_app()
