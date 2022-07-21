@@ -130,7 +130,15 @@ dmypy.json
 
 .idea/
 
-
-*.0
+*.gz
 
 GeneralUtils/data/FashionMNIST/raw/
+GeneralUtils/runs
+
+*.mp4
+
+*.png
+
+*.jpg
+
+*.weights
