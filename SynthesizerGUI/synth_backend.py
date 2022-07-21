@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from typing import Callable, Tuple, List, Any, Dict
 from enum import Enum
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps
 
 
 class IsActive(Enum):
     ACTIVE = "Active"
     NOT_ACTIVE = "NotActive"
+
 
 @dataclass
 class AugmentationMethod:
@@ -36,3 +37,7 @@ class AugmentationUtils:
         gaussian_filter = ImageFilter.GaussianBlur(radius=radius)
         output_im = input_im.filter(gaussian_filter)
         return output_im
+
+    @staticmethod
+    def mirror(input_im: Image) -> Image:
+        return ImageOps.mirror(input_im)

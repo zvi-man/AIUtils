@@ -26,7 +26,10 @@ if 'augmentation_pipe' not in st.session_state:
     blurring = AugmentationMethod(name="Blurring",
                                   func=AugmentationUtils.blur,
                                   func_argc={"radius": 5})
-    au_pipe = AugmentationPipe([blurring])
+    mirror = AugmentationMethod(name="Mirror",
+                                func=AugmentationUtils.mirror,
+                                func_argc={})
+    au_pipe = AugmentationPipe([blurring, mirror])
     st.session_state.augmentation_pipe = au_pipe
 
 with st.sidebar:
@@ -43,8 +46,8 @@ with st.sidebar:
         if aug_method.active:
             st.text("Select Augmentation Value")
             for func_arg_name, func_val in aug_method.func_argc.items():
-                new_func_val = st.text_input(func_arg_name, value=func_val)
-                aug_method.func_argc[func_arg_name] = float(new_func_val)
+                new_func_val = st.number_input(func_arg_name, value=func_val, min_value=0, step=1)
+                aug_method.func_argc[func_arg_name] = new_func_val
 
 window = st.container()
 with window:
@@ -55,8 +58,8 @@ with window:
     if original_image_path is not None:
         input_im = load_image(original_image_path)
         add_centered_text(f"Original Image: {original_image_path.name}")
-        st.image(input_im, width=IMAGE_SIZE)
+        st.image(input_im, use_column_width=True)
         st.write("## ")
         add_centered_text(f"Image After Augmentation")
         augmented_image = st.session_state.augmentation_pipe.augment_image(input_im)
-        st.image(augmented_image, width=IMAGE_SIZE)
+        st.image(augmented_image, use_column_width=True)
