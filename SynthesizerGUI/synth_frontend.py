@@ -5,7 +5,6 @@ from KMUtils.SynthesizerGUI.synth_backend import AugmentationUtils, Augmentation
 
 # Constants
 IMAGE_TYPES = ["png", "jpg", "jpeg"]
-IMAGE_SIZE = 700
 
 
 def load_image(image_file):
@@ -51,7 +50,7 @@ with st.sidebar:
             for func_arg_name, func_val in aug_method.func_argc.items():
                 step = 1 if isinstance(func_val, int) else 0.1
                 min_value = 0 if isinstance(func_val, int) else 0.0
-                new_func_val = st.number_input(func_arg_name, value=func_val, min_value=0, step=step)
+                new_func_val = st.number_input(func_arg_name, value=func_val, min_value=min_value, step=step)
                 aug_method.func_argc[func_arg_name] = new_func_val
 
 window = st.container()

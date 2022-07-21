@@ -142,3 +142,5 @@ GeneralUtils/runs
 *.jpg
 
 *.weights
+
+*.jpeg

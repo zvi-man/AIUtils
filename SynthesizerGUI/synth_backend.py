@@ -45,8 +45,8 @@ class AugmentationUtils:
     @staticmethod
     def subsample(input_im: Image, resize_factor: float, return_original_size: bool = True) -> Image:
         original_size = input_im.size
-        new_size = map(lambda x: x * resize_factor, original_size)
-        output_im = original_size.resize(new_size)
+        new_size = map(lambda x: round(x * resize_factor), original_size)
+        output_im = input_im.resize(new_size)
         if return_original_size:
-            output_im = resize_factor(original_size)
+            output_im = output_im.resize(original_size)
         return output_im
