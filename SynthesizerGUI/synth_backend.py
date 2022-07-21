@@ -41,3 +41,12 @@ class AugmentationUtils:
     @staticmethod
     def mirror(input_im: Image) -> Image:
         return ImageOps.mirror(input_im)
+
+    @staticmethod
+    def subsample(input_im: Image, resize_factor: float, return_original_size: bool = True) -> Image:
+        original_size = input_im.size
+        new_size = map(lambda x: x * resize_factor, original_size)
+        output_im = original_size.resize(new_size)
+        if return_original_size:
+            output_im = resize_factor(original_size)
+        return output_im

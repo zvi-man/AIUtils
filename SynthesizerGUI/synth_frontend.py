@@ -29,7 +29,10 @@ if 'augmentation_pipe' not in st.session_state:
     mirror = AugmentationMethod(name="Mirror",
                                 func=AugmentationUtils.mirror,
                                 func_argc={})
-    au_pipe = AugmentationPipe([blurring, mirror])
+    subsample = AugmentationMethod(name="Subsample",
+                                   func=AugmentationUtils.subsample,
+                                   func_argc={"resize_factor": 0.5})
+    au_pipe = AugmentationPipe([blurring, mirror, subsample])
     st.session_state.augmentation_pipe = au_pipe
 
 with st.sidebar:
@@ -46,7 +49,9 @@ with st.sidebar:
         if aug_method.active:
             st.text("Select Augmentation Value")
             for func_arg_name, func_val in aug_method.func_argc.items():
-                new_func_val = st.number_input(func_arg_name, value=func_val, min_value=0, step=1)
+                step = 1 if isinstance(func_val, int) else 0.1
+                min_value = 0 if isinstance(func_val, int) else 0.0
+                new_func_val = st.number_input(func_arg_name, value=func_val, min_value=0, step=step)
                 aug_method.func_argc[func_arg_name] = new_func_val
 
 window = st.container()
