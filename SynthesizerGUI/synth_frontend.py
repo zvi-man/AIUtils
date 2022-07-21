@@ -1,6 +1,5 @@
 import streamlit as st
 from PIL import Image
-import time
 from KMUtils.SynthesizerGUI.synth_backend import AugmentationUtils, AugmentationMethod, AugmentationPipe, IsActive
 
 # Constants
@@ -31,7 +30,14 @@ if 'augmentation_pipe' not in st.session_state:
     subsample = AugmentationMethod(name="Subsample",
                                    func=AugmentationUtils.subsample,
                                    func_argc={"resize_factor": 0.5})
-    au_pipe = AugmentationPipe([blurring, mirror, subsample])
+    sharpening = AugmentationMethod(name="Sharpening",
+                                    func=AugmentationUtils.sharpening,
+                                    func_argc={"radius": 2})
+    brightness = AugmentationMethod(name="Brightness",
+                                    func=AugmentationUtils.brightness,
+                                    func_argc={"brightness_factor": 1.0})
+
+    au_pipe = AugmentationPipe([sharpening, blurring, mirror, subsample, brightness])
     st.session_state.augmentation_pipe = au_pipe
 
 with st.sidebar:
@@ -58,7 +64,7 @@ with window:
     add_centered_title("The Synthesizer")
     st.write("##")
     original_image_path = st.file_uploader("Upload original image", type=IMAGE_TYPES, accept_multiple_files=False)
-    st.write(st.session_state.augmentation_pipe)
+    # st.write(st.session_state.augmentation_pipe)
     if original_image_path is not None:
         input_im = load_image(original_image_path)
         add_centered_text(f"Original Image: {original_image_path.name}")

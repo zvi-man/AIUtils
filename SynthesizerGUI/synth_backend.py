@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Callable, Tuple, List, Any, Dict
 from enum import Enum
-from PIL import Image, ImageFilter, ImageOps
+from PIL import Image, ImageFilter, ImageOps, ImageEnhance
 
 
 class IsActive(Enum):
@@ -49,4 +49,30 @@ class AugmentationUtils:
         output_im = input_im.resize(new_size)
         if return_original_size:
             output_im = output_im.resize(original_size)
+        return output_im
+
+    @staticmethod
+    def sharpening(input_im: Image, radius: int) -> Image:
+        sharpening_filter = ImageFilter.UnsharpMask(radius=radius)
+        output_im = input_im.filter(sharpening_filter)
+        return output_im
+
+    @staticmethod
+    def motion(input_im: Image) -> Image:
+        # TODO - add motion filter
+        pass
+
+    @staticmethod
+    def zoom():
+        pass
+
+    @staticmethod
+    def brightness(input_im: Image, brightness_factor: float) -> Image:
+        """
+        brightness_factor == 1 - image same
+        brightness_factor = 0.5 - darkens the image
+        brightness_factor = 1.5 - brightens the image
+        """
+        enhancer = ImageEnhance.Brightness(input_im)
+        output_im = enhancer.enhance(brightness_factor)
         return output_im
