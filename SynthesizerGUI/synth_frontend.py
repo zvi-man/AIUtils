@@ -62,11 +62,13 @@ with st.sidebar:
         aug_method.active = genre == IsActive.ACTIVE.value
         if aug_method.active:
             st.text("Select Augmentation Value")
-            for func_arg_name, func_val in aug_method.func_argc.items():
-                step = 1 if isinstance(func_val, int) else 0.1
-                min_value = 0 if isinstance(func_val, int) else 0.0
-                new_func_val = st.number_input(func_arg_name, value=func_val, min_value=min_value, step=step)
-                aug_method.func_argc[func_arg_name] = new_func_val
+            for arg_name, arg_val in aug_method.func_argc.items():
+                step = 1 if aug_method.func_arg_type[arg_name] == int else 0.1
+                min_value = 0 if aug_method.func_arg_type[arg_name] == int else 0.0
+                new_func_val = st.number_input(arg_name, value=arg_val, min_value=min_value, step=step)
+                # Make sure the given value is of the correct class
+                new_func_val = aug_method.func_arg_type[arg_name](new_func_val)
+                aug_method.func_argc[arg_name] = new_func_val
 
 window = st.container()
 with window:

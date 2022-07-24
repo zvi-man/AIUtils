@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, List, Any, Dict
 from enum import Enum
 
@@ -18,7 +18,13 @@ class AugmentationMethod:
     name: str
     func: Callable
     func_argc: Dict[str, Any]
+    func_arg_type: Dict[str, type] = field(init=False)
     active: bool = False
+
+    def __post_init__(self):
+        self.func_arg_type = dict()
+        for arg_name, arg_val in self.func_argc.items():
+            self.func_arg_type[arg_name] = type(arg_val)
 
     def augment_image(self, pil_im: Image) -> Image:
         return self.func(pil_im, **self.func_argc)
