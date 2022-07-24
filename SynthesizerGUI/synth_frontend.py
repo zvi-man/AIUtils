@@ -36,8 +36,14 @@ if 'augmentation_pipe' not in st.session_state:
     brightness = AugmentationMethod(name="Brightness",
                                     func=AugmentationUtils.brightness,
                                     func_argc={"brightness_factor": 1.0})
+    zoom = AugmentationMethod(name="zoom",
+                              func=AugmentationUtils.zoom,
+                              func_argc={"top_factor": 0.0,
+                                         "bot_factor": 0.0,
+                                         "left_factor": 0.0,
+                                         "right_factor": 0.0})
 
-    au_pipe = AugmentationPipe([sharpening, blurring, mirror, subsample, brightness])
+    au_pipe = AugmentationPipe([sharpening, blurring, mirror, subsample, brightness, zoom])
     st.session_state.augmentation_pipe = au_pipe
 
 with st.sidebar:

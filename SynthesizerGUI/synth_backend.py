@@ -63,8 +63,15 @@ class AugmentationUtils:
         pass
 
     @staticmethod
-    def zoom():
-        pass
+    def zoom(input_im: Image, top_factor: float, bot_factor: float, left_factor: float, right_factor: float) -> Image:
+        original_size = input_im.size
+        width, height = original_size
+        top_pix = round(top_factor * height)
+        bot_pix = height - round(bot_factor * height)
+        left_pix = round(left_factor * height)
+        right_pix = width - round(right_factor * height)
+        cropped_im = input_im.crop((left_pix, top_pix, right_pix, bot_pix))
+        return cropped_im.resize(original_size)
 
     @staticmethod
     def brightness(input_im: Image, brightness_factor: float) -> Image:
