@@ -42,8 +42,11 @@ if 'augmentation_pipe' not in st.session_state:
                                          "bot_factor": 0.0,
                                          "left_factor": 0.0,
                                          "right_factor": 0.0})
+    motion = AugmentationMethod(name="Motion",
+                                func=AugmentationUtils.motion,
+                                func_argc={"radius": 5})
 
-    au_pipe = AugmentationPipe([sharpening, blurring, mirror, subsample, brightness, zoom])
+    au_pipe = AugmentationPipe([sharpening, blurring, mirror, subsample, brightness, zoom, motion])
     st.session_state.augmentation_pipe = au_pipe
 
 with st.sidebar:

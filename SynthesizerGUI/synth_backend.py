@@ -1,7 +1,11 @@
 from dataclasses import dataclass
-from typing import Callable, Tuple, List, Any, Dict
+from typing import Callable, List, Any, Dict
 from enum import Enum
+
+import PIL.Image
 from PIL import Image, ImageFilter, ImageOps, ImageEnhance
+import numpy as np
+import cv2
 
 
 class IsActive(Enum):
@@ -58,9 +62,13 @@ class AugmentationUtils:
         return output_im
 
     @staticmethod
-    def motion(input_im: Image) -> Image:
-        # TODO - add motion filter
-        pass
+    def motion(input_im: Image, radius: int) -> Image:
+        kernel_motion_blur = np.zeros((radius, radius))
+        kernel_motion_blur[int((radius - 1) / 2), :] = np.ones(radius)
+        kernel_motion_blur = kernel_motion_blur / radius
+        input_np_im = np.array(input_im)
+        output_np_im = cv2.filter2D(input_np_im, -1, kernel_motion_blur)
+        return PIL.Image.fromarray(output_np_im)
 
     @staticmethod
     def zoom(input_im: Image, top_factor: float, bot_factor: float, left_factor: float, right_factor: float) -> Image:
