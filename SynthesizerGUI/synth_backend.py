@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Callable, List, Any, Dict
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 import PIL.Image
 from PIL import Image, ImageFilter, ImageOps, ImageEnhance
@@ -9,9 +9,9 @@ import cv2
 
 
 class AugMode(IntEnum):
-    NOT_ACTIVE = 0
-    ACTIVE = 1
-    RANDOM = 2
+    NotActive = 0
+    Active = 1
+    Random = 2
 
 
 def get_true_on_probability(probability: float) -> bool:
@@ -19,6 +19,7 @@ def get_true_on_probability(probability: float) -> bool:
         raise ValueError("probability must be between 0 and 1")
     if probability == 0:
         return False
+    print("in get true random prob")
     return np.random.uniform(0, 1) <= probability
 
 
@@ -28,8 +29,8 @@ class AugmentationMethod:
     func: Callable
     func_argc: Dict[str, Any]
     func_arg_type: Dict[str, type] = field(init=False)
-    aug_mode: AugMode = AugMode.NOT_ACTIVE
-    use_aug_at_probability: float = 0
+    aug_mode: AugMode = AugMode.NotActive
+    use_aug_at_probability: float = 0.0
 
     def __post_init__(self):
         self.func_arg_type = dict()
@@ -47,11 +48,12 @@ class AugmentationPipe:
     def augment_image(self, pil_im: Image) -> Image:
         image_name = ''
         for aug_method in self.augmentation_list:
-            if aug_method.aug_mode == AugMode.NOT_ACTIVE:
+            if aug_method.aug_mode == AugMode.NotActive:
                 continue
-            if aug_method.aug_mode == AugMode.ACTIVE or get_true_on_probability(aug_method.use_aug_at_probability):
+            if aug_method.aug_mode == AugMode.Active or get_true_on_probability(aug_method.use_aug_at_probability):
                 image_name += aug_method.name + "_"
                 pil_im = aug_method.augment_image(pil_im)
+                print(f"preforming aug: {aug_method.name}")
         return pil_im, image_name
 
 

@@ -1,7 +1,8 @@
 import streamlit as st
 from PIL import Image
-from KMUtils.SynthesizerGUI.synth_backend import AugmentationUtils, AugmentationMethod, AugmentationPipe, AugMode
+
 from KMUtils.SynthesizerGUI.gui_config import init_aug_pipe
+from KMUtils.SynthesizerGUI.synth_backend import AugMode
 
 # Constants
 IMAGE_TYPES = ["png", "jpg", "jpeg"]
@@ -35,22 +36,24 @@ with st.sidebar:
     st.title("Select Image Augmentations")
     for aug_method in st.session_state.augmentation_pipe.augmentation_list:
         st.subheader(aug_method.name)
-        aug_mode = st.radio(
+        aug_mode_str = st.radio(
             f"Select {aug_method.name} Options",
-            (AugMode.NOT_ACTIVE.value, AugMode.ACTIVE.value, AugMode.RANDOM.value),
+            (AugMode.NotActive.name, AugMode.Active.name, AugMode.Random.name),
             index=aug_method.aug_mode,
             horizontal=True
         )
-        if aug_mode == AugMode.RANDOM.value:
+        aug_method.aug_mode = AugMode[aug_mode_str]
+        if aug_method.aug_mode == AugMode.Random:
             aug_method.use_aug_at_probability = float(
-                st.number_input("Specify the probability of usage", value=aug_method.use_aug_at_probability,
-                                min_value=0.0, step=0.1))
-        if aug_mode != AugMode.NOT_ACTIVE.value:
+                st.number_input(f"Specify the probability of usage", value=aug_method.use_aug_at_probability,
+                                min_value=0.0, step=0.1, key=f"prob {aug_method.name}"))
+        if aug_method.aug_mode != AugMode.NotActive:
             st.text("Select Augmentation Value")
             for arg_name, arg_val in aug_method.func_argc.items():
                 step = 1 if aug_method.func_arg_type[arg_name] == int else 0.1
                 min_value = 0 if aug_method.func_arg_type[arg_name] == int else 0.0
-                new_func_val = st.number_input(arg_name, value=arg_val, min_value=min_value, step=step)
+                new_func_val = st.number_input(arg_name, value=arg_val, min_value=min_value,
+                                               step=step, key=f"{aug_method.name}, {arg_name}")
                 # Make sure the given value is of the correct class
                 new_func_val = aug_method.func_arg_type[arg_name](new_func_val)
                 aug_method.func_argc[arg_name] = new_func_val
@@ -68,8 +71,8 @@ with window:
         st.image(input_im, use_column_width=True)
         st.write("##")
         add_centered_text(f"Image After Augmentation")
-        augmented_image = st.session_state.augmentation_pipe.augment_image(input_im)
-        st.image(augmented_image, use_column_width=True)
+        aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im)
+        st.image(aug_im, use_column_width=True, caption=im_name)
 
         st.title(f"How many images to Synthesis?")
         st.write("##")
