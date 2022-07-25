@@ -8,9 +8,18 @@ import numpy as np
 import cv2
 
 
-class IsActive(Enum):
-    ACTIVE = "Active"
+class AugMode(Enum):
     NOT_ACTIVE = "NotActive"
+    ACTIVE = "Active"
+    RANDOM = "Rand"
+
+
+def get_true_on_probability(probability: float) -> bool:
+    if probability < 0 or probability > 1:
+        raise ValueError("probability must be between 0 and 1")
+    if probability == 0:
+        return False
+    return np.random.uniform(0, 1) <= probability
 
 
 @dataclass
@@ -19,7 +28,7 @@ class AugmentationMethod:
     func: Callable
     func_argc: Dict[str, Any]
     func_arg_type: Dict[str, type] = field(init=False)
-    active: bool = False
+    use_aug_at_probability: float = 0
 
     def __post_init__(self):
         self.func_arg_type = dict()
@@ -36,7 +45,7 @@ class AugmentationPipe:
 
     def augment_image(self, pil_im: Image) -> Image:
         for aug_method in self.augmentation_list:
-            if aug_method.active:
+            if get_true_on_probability(aug_method.use_aug_at_probability):
                 pil_im = aug_method.augment_image(pil_im)
         return pil_im
 

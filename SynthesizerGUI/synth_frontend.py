@@ -1,6 +1,6 @@
 import streamlit as st
 from PIL import Image
-from KMUtils.SynthesizerGUI.synth_backend import AugmentationUtils, AugmentationMethod, AugmentationPipe, IsActive
+from KMUtils.SynthesizerGUI.synth_backend import AugmentationUtils, AugmentationMethod, AugmentationPipe, AugMode
 
 # Constants
 IMAGE_TYPES = ["png", "jpg", "jpeg"]
@@ -61,13 +61,13 @@ with st.sidebar:
     st.write("##")
     for aug_method in st.session_state.augmentation_pipe.augmentation_list:
         st.subheader(aug_method.name)
-        genre = st.radio(
+        use_aug = st.radio(
             f"Select {aug_method.name} Options",
-            (IsActive.NOT_ACTIVE.value, IsActive.ACTIVE.value),
+            (AugMode.NOT_ACTIVE.value, AugMode.ACTIVE.value),
             horizontal=True
         )
-        aug_method.active = genre == IsActive.ACTIVE.value
-        if aug_method.active:
+        aug_method.use_aug_at_probability = 1.0 if use_aug == AugMode.ACTIVE.value else 0.0
+        if aug_method.use_aug_at_probability != 0.0:
             st.text("Select Augmentation Value")
             for arg_name, arg_val in aug_method.func_argc.items():
                 step = 1 if aug_method.func_arg_type[arg_name] == int else 0.1
