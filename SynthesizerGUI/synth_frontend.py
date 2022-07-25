@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
 from KMUtils.SynthesizerGUI.synth_backend import AugmentationUtils, AugmentationMethod, AugmentationPipe, AugMode
+from KMUtils.SynthesizerGUI.gui_config import init_aug_pipe
 
 # Constants
 IMAGE_TYPES = ["png", "jpg", "jpeg"]
@@ -25,32 +26,7 @@ def add_centered_text(text: str):
 
 # Init Session variables
 if 'augmentation_pipe' not in st.session_state:
-    blurring = AugmentationMethod(name="Blurring",
-                                  func=AugmentationUtils.blur,
-                                  func_argc={"radius": 5})
-    mirror = AugmentationMethod(name="Mirror",
-                                func=AugmentationUtils.mirror,
-                                func_argc={})
-    subsample = AugmentationMethod(name="Subsample",
-                                   func=AugmentationUtils.subsample,
-                                   func_argc={"resize_factor": 0.5})
-    sharpening = AugmentationMethod(name="Sharpening",
-                                    func=AugmentationUtils.sharpening,
-                                    func_argc={"radius": 2})
-    brightness = AugmentationMethod(name="Brightness",
-                                    func=AugmentationUtils.brightness,
-                                    func_argc={"brightness_factor": 1.0})
-    zoom = AugmentationMethod(name="zoom",
-                              func=AugmentationUtils.zoom,
-                              func_argc={"top_factor": 0.0,
-                                         "bot_factor": 0.0,
-                                         "left_factor": 0.0,
-                                         "right_factor": 0.0})
-    motion = AugmentationMethod(name="Motion",
-                                func=AugmentationUtils.motion,
-                                func_argc={"radius": 5})
-    au_pipe = AugmentationPipe([sharpening, blurring, mirror, subsample, brightness, zoom, motion])
-    st.session_state.augmentation_pipe = au_pipe
+    st.session_state.augmentation_pipe = init_aug_pipe()
 
 if 'num_im' not in st.session_state:
     st.session_state.num_im = DEFAULT_NUM_OF_IMAGES
