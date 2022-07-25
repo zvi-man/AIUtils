@@ -55,19 +55,21 @@ if 'augmentation_pipe' not in st.session_state:
 if 'num_im' not in st.session_state:
     st.session_state.num_im = DEFAULT_NUM_OF_IMAGES
 
-
 with st.sidebar:
     st.title("Select Image Augmentations")
-    st.write("##")
     for aug_method in st.session_state.augmentation_pipe.augmentation_list:
         st.subheader(aug_method.name)
-        use_aug = st.radio(
+        aug_mode = st.radio(
             f"Select {aug_method.name} Options",
-            (AugMode.NOT_ACTIVE.value, AugMode.ACTIVE.value),
+            (AugMode.NOT_ACTIVE.value, AugMode.ACTIVE.value, AugMode.RANDOM.value),
+            index=aug_method.aug_mode,
             horizontal=True
         )
-        aug_method.use_aug_at_probability = 1.0 if use_aug == AugMode.ACTIVE.value else 0.0
-        if aug_method.use_aug_at_probability != 0.0:
+        if aug_mode == AugMode.RANDOM.value:
+            aug_method.use_aug_at_probability = float(
+                st.number_input("Specify the probability of usage", value=aug_method.use_aug_at_probability,
+                                min_value=0.0, step=0.1))
+        if aug_mode != AugMode.NOT_ACTIVE.value:
             st.text("Select Augmentation Value")
             for arg_name, arg_val in aug_method.func_argc.items():
                 step = 1 if aug_method.func_arg_type[arg_name] == int else 0.1
@@ -76,6 +78,7 @@ with st.sidebar:
                 # Make sure the given value is of the correct class
                 new_func_val = aug_method.func_arg_type[arg_name](new_func_val)
                 aug_method.func_argc[arg_name] = new_func_val
+        st.write("##")
 
 window = st.container()
 with window:
@@ -101,6 +104,8 @@ with window:
         while idx < st.session_state.num_im:
             cols = st.columns(5)
             for i in range(5):
-                cols[i].image(augmented_image, use_column_width=True, caption="403-13-401")
+                aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im)
+                cols[i].image(aug_im,
+                              use_column_width=True,
+                              caption=im_name)
                 idx += 1
-

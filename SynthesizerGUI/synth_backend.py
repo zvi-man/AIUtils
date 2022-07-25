@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Callable, List, Any, Dict
-from enum import Enum
+from enum import Enum, IntEnum
 
 import PIL.Image
 from PIL import Image, ImageFilter, ImageOps, ImageEnhance
@@ -8,10 +8,10 @@ import numpy as np
 import cv2
 
 
-class AugMode(Enum):
-    NOT_ACTIVE = "NotActive"
-    ACTIVE = "Active"
-    RANDOM = "Rand"
+class AugMode(IntEnum):
+    NOT_ACTIVE = 0
+    ACTIVE = 1
+    RANDOM = 2
 
 
 def get_true_on_probability(probability: float) -> bool:
@@ -28,6 +28,7 @@ class AugmentationMethod:
     func: Callable
     func_argc: Dict[str, Any]
     func_arg_type: Dict[str, type] = field(init=False)
+    aug_mode: AugMode = AugMode.NOT_ACTIVE
     use_aug_at_probability: float = 0
 
     def __post_init__(self):
@@ -44,10 +45,14 @@ class AugmentationPipe:
     augmentation_list: List[AugmentationMethod]
 
     def augment_image(self, pil_im: Image) -> Image:
+        image_name = ''
         for aug_method in self.augmentation_list:
-            if get_true_on_probability(aug_method.use_aug_at_probability):
+            if aug_method.aug_mode == AugMode.NOT_ACTIVE:
+                continue
+            if aug_method.aug_mode == AugMode.ACTIVE or get_true_on_probability(aug_method.use_aug_at_probability):
+                image_name += aug_method.name + "_"
                 pil_im = aug_method.augment_image(pil_im)
-        return pil_im
+        return pil_im, image_name
 
 
 class AugmentationUtils:
