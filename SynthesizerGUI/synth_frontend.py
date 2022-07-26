@@ -76,11 +76,9 @@ with window:
 
         st.title(f"How many images to Synthesis?")
         st.write("##")
-        st.session_state.num_im = int(st.number_input("", value=st.session_state.num_im,
-                                                      min_value=MIN_NUM_IMAGES,
-                                                      step=NUM_IM_STEP))
+        st.number_input("", key="num_im", min_value=MIN_NUM_IMAGES, step=NUM_IM_STEP)
         idx = 0
-        while idx < st.session_state.num_im:
+        while idx < int(st.session_state.num_im):
             cols = st.columns(5)
             for i in range(5):
                 aug_im, im_name = st.session_state.augmentation_pipe.augment_image_with_randomness(input_im)
