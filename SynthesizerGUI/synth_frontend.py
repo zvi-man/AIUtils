@@ -29,6 +29,15 @@ def add_centered_text(text: str):
 if 'augmentation_pipe' not in st.session_state:
     st.session_state.augmentation_pipe = init_aug_pipe()
 
+for aug_method in st.session_state.augmentation_pipe.augmentation_list:
+    if f"{aug_method.name}, AugMode" not in st.session_state:
+        st.session_state[f"{aug_method.name}, AugMode"] = aug_method.aug_mode.name
+    if f"prob {aug_method.name}" not in st.session_state:
+        st.session_state[f"prob {aug_method.name}"] = aug_method.use_aug_at_probability
+    for arg_name, arg_val in aug_method.func_argc.items():
+        if f"{aug_method.name}, {arg_name}" not in st.session_state:
+            st.session_state[f"{aug_method.name}, {arg_name}"] = arg_val
+
 if 'num_im' not in st.session_state:
     st.session_state.num_im = DEFAULT_NUM_OF_IMAGES
 
@@ -36,23 +45,23 @@ with st.sidebar:
     st.title("Select Image Augmentations")
     for aug_method in st.session_state.augmentation_pipe.augmentation_list:
         st.subheader(aug_method.name)
-        aug_mode_str = st.radio(
+        st.radio(
             f"Select {aug_method.name} Options",
             (AugMode.NotActive.name, AugMode.Active.name, AugMode.Random.name),
-            index=aug_method.aug_mode,
+            key=f"{aug_method.name}, AugMode",
             horizontal=True
         )
-        aug_method.aug_mode = AugMode[aug_mode_str]
+        aug_method.aug_mode = AugMode[st.session_state[f"{aug_method.name}, AugMode"]]
         if aug_method.aug_mode == AugMode.Random:
             aug_method.use_aug_at_probability = float(
-                st.number_input(f"Specify the probability of usage", value=aug_method.use_aug_at_probability,
+                st.number_input(f"Specify the probability of usage",
                                 min_value=0.0, step=0.1, key=f"prob {aug_method.name}"))
         if aug_method.aug_mode != AugMode.NotActive:
             st.text("Select Augmentation Value")
             for arg_name, arg_val in aug_method.func_argc.items():
                 step = 1 if aug_method.func_arg_type[arg_name] == int else 0.1
                 min_value = 0 if aug_method.func_arg_type[arg_name] == int else 0.0
-                new_func_val = st.number_input(arg_name, value=arg_val, min_value=min_value,
+                new_func_val = st.number_input(arg_name, min_value=min_value,
                                                step=step, key=f"{aug_method.name}, {arg_name}")
                 # Make sure the given value is of the correct class
                 new_func_val = aug_method.func_arg_type[arg_name](new_func_val)
