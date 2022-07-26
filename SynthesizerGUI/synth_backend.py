@@ -19,7 +19,6 @@ def get_true_on_probability(probability: float) -> bool:
         raise ValueError("probability must be between 0 and 1")
     if probability == 0:
         return False
-    print("in get true random prob")
     return np.random.uniform(0, 1) <= probability
 
 
@@ -30,14 +29,14 @@ class AugmentationMethod:
     func_argc: Dict[str, Any]
     func_arg_type: Dict[str, type] = field(init=False)
     aug_mode: AugMode = AugMode.NotActive
-    use_aug_at_probability: float = 0.0
+    use_aug_at_probability: float = 0.5
 
     def __post_init__(self):
         self.func_arg_type = dict()
         for arg_name, arg_val in self.func_argc.items():
             self.func_arg_type[arg_name] = type(arg_val)
 
-    def augment_image(self, pil_im: Image) -> Image:
+    def augment_image_no_random(self, pil_im: Image) -> Image:
         return self.func(pil_im, **self.func_argc)
 
 
@@ -45,15 +44,23 @@ class AugmentationMethod:
 class AugmentationPipe:
     augmentation_list: List[AugmentationMethod]
 
-    def augment_image(self, pil_im: Image) -> Image:
+    def augment_image_without_randomness(self, pil_im: Image) -> Image:
+        image_name = ''
+        for aug_method in self.augmentation_list:
+            if aug_method.aug_mode == AugMode.NotActive:
+                continue
+            image_name += aug_method.name + "_"
+            pil_im = aug_method.augment_image_no_random(pil_im)
+        return pil_im, image_name
+
+    def augment_image_with_randomness(self, pil_im: Image) -> Image:
         image_name = ''
         for aug_method in self.augmentation_list:
             if aug_method.aug_mode == AugMode.NotActive:
                 continue
             if aug_method.aug_mode == AugMode.Active or get_true_on_probability(aug_method.use_aug_at_probability):
                 image_name += aug_method.name + "_"
-                pil_im = aug_method.augment_image(pil_im)
-                print(f"preforming aug: {aug_method.name}")
+                pil_im = aug_method.augment_image_no_random(pil_im)
         return pil_im, image_name
 
 

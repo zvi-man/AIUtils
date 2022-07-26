@@ -71,7 +71,7 @@ with window:
         st.image(input_im, use_column_width=True)
         st.write("##")
         add_centered_text(f"Image After Augmentation")
-        aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im)
+        aug_im, im_name = st.session_state.augmentation_pipe.augment_image_without_randomness(input_im)
         st.image(aug_im, use_column_width=True, caption=im_name)
 
         st.title(f"How many images to Synthesis?")
@@ -83,7 +83,7 @@ with window:
         while idx < st.session_state.num_im:
             cols = st.columns(5)
             for i in range(5):
-                aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im)
+                aug_im, im_name = st.session_state.augmentation_pipe.augment_image_with_randomness(input_im)
                 cols[i].image(aug_im,
                               use_column_width=True,
                               caption=im_name)
