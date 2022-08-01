@@ -7,6 +7,13 @@ from PIL import Image, ImageFilter, ImageOps, ImageEnhance
 import numpy as np
 import cv2
 
+# Constants
+DELIMITER = "_"
+
+# TODO: fix bugs
+# 1. Bottom lines at end of image name
+# 3. enable randomness in values
+
 
 class AugMode(IntEnum):
     NotActive = 0
@@ -19,48 +26,63 @@ def get_true_on_probability(probability: float) -> bool:
         raise ValueError("probability must be between 0 and 1")
     if probability == 0:
         return False
-    return np.random.uniform(0, 1) <= probability
+    return np.random.random_sample() <= probability
 
 
 @dataclass
 class AugmentationMethod:
     name: str
     func: Callable
-    func_argc: Dict[str, Any]
+    func_args: Dict[str, Any]
+    func_args_std: Dict[str, Any] = field(default_factory=dict)
     func_arg_type: Dict[str, type] = field(init=False)
     aug_mode: AugMode = AugMode.NotActive
     use_aug_at_probability: float = 0.5
 
     def __post_init__(self):
         self.func_arg_type = dict()
-        for arg_name, arg_val in self.func_argc.items():
+        for arg_name, arg_val in self.func_args.items():
             self.func_arg_type[arg_name] = type(arg_val)
+        if not self.func_args_std:
+            for arg_name in self.func_args:
+                self.func_args_std[arg_name] = self.func_arg_type[arg_name](0)
+
+    def gen_report_str(self, argument_values: List[Any]) -> str:
+        args_str = DELIMITER.join(map(str, argument_values))
+        return self.name + DELIMITER + args_str
 
     def augment_image_no_random(self, pil_im: Image) -> Image:
-        return self.func(pil_im, **self.func_argc)
+        if self.aug_mode == AugMode.NotActive:
+            return pil_im, ""
+        func_arg_values = [val for key, val in self.func_args.items()]
+        report_str = self.gen_report_str(func_arg_values)
+        return self.func(pil_im, **self.func_args), report_str
+
+    def augment_image_with_random(self, pil_im: Image) -> Image:
+        if self.aug_mode != AugMode.NotActive:
+            if self.aug_mode == AugMode.Active:
+                return self.augment_image_no_random(pil_im)
+            # self.aug_mode == AugMode.Random
+            if get_true_on_probability(self.use_aug_at_probability):
+                func_arg_values = [val for key, val in self.func_args.items()]
+                report_str = self.gen_report_str(func_arg_values)
+                return self.func(pil_im, **self.func_args), report_str
+        return pil_im, ""
 
 
 @dataclass
 class AugmentationPipe:
     augmentation_list: List[AugmentationMethod]
 
-    def augment_image_without_randomness(self, pil_im: Image) -> Image:
+    def augment_image(self, pil_im: Image, random: bool = False) -> Image:
         image_name = ''
         for aug_method in self.augmentation_list:
-            if aug_method.aug_mode == AugMode.NotActive:
-                continue
-            image_name += aug_method.name + "_"
-            pil_im = aug_method.augment_image_no_random(pil_im)
-        return pil_im, image_name
-
-    def augment_image_with_randomness(self, pil_im: Image) -> Image:
-        image_name = ''
-        for aug_method in self.augmentation_list:
-            if aug_method.aug_mode == AugMode.NotActive:
-                continue
-            if aug_method.aug_mode == AugMode.Active or get_true_on_probability(aug_method.use_aug_at_probability):
-                image_name += aug_method.name + "_"
-                pil_im = aug_method.augment_image_no_random(pil_im)
+            if random:
+                pil_im, aug_str = aug_method.augment_image_with_random(pil_im)
+            else:
+                pil_im, aug_str = aug_method.augment_image_no_random(pil_im)
+            if aug_str:
+                image_name += aug_str + "_"
         return pil_im, image_name
 
 

@@ -6,7 +6,7 @@ from KMUtils.SynthesizerGUI.synth_backend import AugMode
 
 # Constants
 IMAGE_TYPES = ["png", "jpg", "jpeg"]
-DEFAULT_NUM_OF_IMAGES = 0
+DEFAULT_NUM_OF_IMAGES = 10
 NUM_IM_STEP = 10
 MIN_NUM_IMAGES = 0
 NUM_IMAGES_ROW = 5
@@ -28,18 +28,14 @@ def add_centered_text(text: str):
 # Init Session variables
 if 'augmentation_pipe' not in st.session_state:
     st.session_state.augmentation_pipe = init_aug_pipe()
-
-for aug_method in st.session_state.augmentation_pipe.augmentation_list:
-    if f"{aug_method.name}, AugMode" not in st.session_state:
-        st.session_state[f"{aug_method.name}, AugMode"] = aug_method.aug_mode.name
-    if f"prob {aug_method.name}" not in st.session_state:
-        st.session_state[f"prob {aug_method.name}"] = aug_method.use_aug_at_probability
-    for arg_name, arg_val in aug_method.func_argc.items():
-        if f"{aug_method.name}, {arg_name}" not in st.session_state:
-            st.session_state[f"{aug_method.name}, {arg_name}"] = arg_val
-
-if 'num_im' not in st.session_state:
-    st.session_state.num_im = DEFAULT_NUM_OF_IMAGES
+    for aug_method in st.session_state.augmentation_pipe.augmentation_list:
+        if f"{aug_method.name}, AugMode" not in st.session_state:
+            st.session_state[f"{aug_method.name}, AugMode"] = aug_method.aug_mode.name
+        if f"prob {aug_method.name} default val" not in st.session_state:
+            st.session_state[f"prob {aug_method.name} default val"] = aug_method.use_aug_at_probability
+        for arg_name, arg_val in aug_method.func_args.items():
+            if f"{aug_method.name}, {arg_name} default val" not in st.session_state:
+                st.session_state[f"{aug_method.name}, {arg_name} default val"] = arg_val
 
 with st.sidebar:
     st.title("Select Image Augmentations")
@@ -53,19 +49,21 @@ with st.sidebar:
         )
         aug_method.aug_mode = AugMode[st.session_state[f"{aug_method.name}, AugMode"]]
         if aug_method.aug_mode == AugMode.Random:
+            default_val = st.session_state[f"prob {aug_method.name} default val"]
             aug_method.use_aug_at_probability = float(
-                st.number_input(f"Specify the probability of usage",
+                st.number_input(f"Specify the probability of usage", value=default_val,
                                 min_value=0.0, step=0.1, key=f"prob {aug_method.name}"))
         if aug_method.aug_mode != AugMode.NotActive:
             st.text("Select Augmentation Value")
-            for arg_name, arg_val in aug_method.func_argc.items():
+            for arg_name, arg_val in aug_method.func_args.items():
                 step = 1 if aug_method.func_arg_type[arg_name] == int else 0.1
                 min_value = 0 if aug_method.func_arg_type[arg_name] == int else 0.0
-                new_func_val = st.number_input(arg_name, min_value=min_value,
+                default_val = st.session_state[f"{aug_method.name}, {arg_name} default val"]
+                new_func_val = st.number_input(arg_name, value=default_val, min_value=min_value,
                                                step=step, key=f"{aug_method.name}, {arg_name}")
                 # Make sure the given value is of the correct class
                 new_func_val = aug_method.func_arg_type[arg_name](new_func_val)
-                aug_method.func_argc[arg_name] = new_func_val
+                aug_method.func_args[arg_name] = new_func_val
         st.write("##")
 
 window = st.container()
@@ -80,17 +78,17 @@ with window:
         st.image(input_im, use_column_width=True)
         st.write("##")
         add_centered_text(f"Image After Augmentation")
-        aug_im, im_name = st.session_state.augmentation_pipe.augment_image_without_randomness(input_im)
+        aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im, random=False)
         st.image(aug_im, use_column_width=True, caption=im_name)
 
         st.title(f"How many images to Synthesis?")
         st.write("##")
-        st.number_input("", key="num_im", min_value=MIN_NUM_IMAGES, step=NUM_IM_STEP)
+        st.number_input("", value=DEFAULT_NUM_OF_IMAGES, key="num_im", min_value=MIN_NUM_IMAGES, step=NUM_IM_STEP)
         idx = 0
         while idx < int(st.session_state.num_im):
             cols = st.columns(5)
             for i in range(5):
-                aug_im, im_name = st.session_state.augmentation_pipe.augment_image_with_randomness(input_im)
+                aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im, random=True)
                 cols[i].image(aug_im,
                               use_column_width=True,
                               caption=im_name)
