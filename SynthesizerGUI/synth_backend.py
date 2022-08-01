@@ -66,12 +66,9 @@ class AugmentationMethod:
     def get_func_args_randomized(self) -> Dict[str, Any]:
         func_args_randomized = self.func_args.copy()
         for arg_name, arg_val in func_args_randomized.items():
-            print(f"{arg_name}, {arg_val}, {type(arg_val)}, {isinstance(type(arg_val), int)}")
             if isinstance(arg_val, int):
-                print("in here")
                 rand_val = np.random.randint(-self.func_args_std[arg_name], self.func_args_std[arg_name] + 1)
             else:
-                print("in there")
                 rand_val = np.random.uniform(-self.func_args_std[arg_name], self.func_args_std[arg_name])
             func_args_randomized[arg_name] = arg_val + rand_val
         return func_args_randomized
