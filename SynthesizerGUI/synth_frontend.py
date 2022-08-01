@@ -36,6 +36,9 @@ if 'augmentation_pipe' not in st.session_state:
         for arg_name, arg_val in aug_method.func_args.items():
             if f"{aug_method.name}, {arg_name} default val" not in st.session_state:
                 st.session_state[f"{aug_method.name}, {arg_name} default val"] = arg_val
+        for arg_name, arg_std in aug_method.func_args_std.items():
+            if f"{aug_method.name}, {arg_name} std default val" not in st.session_state:
+                st.session_state[f"{aug_method.name}, {arg_name} std default val"] = arg_std
 
 with st.sidebar:
     st.title("Select Image Augmentations")
@@ -49,6 +52,7 @@ with st.sidebar:
         )
         aug_method.aug_mode = AugMode[st.session_state[f"{aug_method.name}, AugMode"]]
         if aug_method.aug_mode == AugMode.Random:
+            # Add probability of use input
             default_val = st.session_state[f"prob {aug_method.name} default val"]
             aug_method.use_aug_at_probability = float(
                 st.number_input(f"Specify the probability of usage", value=default_val,
@@ -59,11 +63,19 @@ with st.sidebar:
                 step = 1 if aug_method.func_arg_type[arg_name] == int else 0.1
                 min_value = 0 if aug_method.func_arg_type[arg_name] == int else 0.0
                 default_val = st.session_state[f"{aug_method.name}, {arg_name} default val"]
-                new_func_val = st.number_input(arg_name, value=default_val, min_value=min_value,
-                                               step=step, key=f"{aug_method.name}, {arg_name}")
+                new_func_arg_val = st.number_input(arg_name, value=default_val, min_value=min_value,
+                                                   step=step, key=f"{aug_method.name}, {arg_name}")
                 # Make sure the given value is of the correct class
-                new_func_val = aug_method.func_arg_type[arg_name](new_func_val)
-                aug_method.func_args[arg_name] = new_func_val
+                new_func_arg_val = aug_method.func_arg_type[arg_name](new_func_arg_val)
+                aug_method.func_args[arg_name] = new_func_arg_val
+
+                if aug_method.aug_mode == AugMode.Random:
+                    default_val = st.session_state[f"{aug_method.name}, {arg_name} std default val"]
+                    new_func_arg_std = st.number_input(arg_name + "_std", value=default_val, min_value=min_value,
+                                                       step=step, key=f"{aug_method.name}, {arg_name} std")
+                    # Make sure the given value is of the correct class
+                    new_func_arg_std = aug_method.func_arg_type[arg_name](new_func_arg_std)
+                    aug_method.func_args_std[arg_name] = new_func_arg_std
         st.write("##")
 
 window = st.container()

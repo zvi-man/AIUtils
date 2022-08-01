@@ -10,10 +10,6 @@ import cv2
 # Constants
 DELIMITER = "_"
 
-# TODO: fix bugs
-# 1. Bottom lines at end of image name
-# 3. enable randomness in values
-
 
 class AugMode(IntEnum):
     NotActive = 0
@@ -26,6 +22,7 @@ def get_true_on_probability(probability: float) -> bool:
         raise ValueError("probability must be between 0 and 1")
     if probability == 0:
         return False
+    # noinspection PyArgumentList
     return np.random.random_sample() <= probability
 
 
@@ -35,9 +32,9 @@ class AugmentationMethod:
     func: Callable
     func_args: Dict[str, Any]
     func_args_std: Dict[str, Any] = field(default_factory=dict)
-    func_arg_type: Dict[str, type] = field(init=False)
     aug_mode: AugMode = AugMode.NotActive
     use_aug_at_probability: float = 0.5
+    func_arg_type: Dict[str, type] = field(init=False)
 
     def __post_init__(self):
         self.func_arg_type = dict()
@@ -46,10 +43,6 @@ class AugmentationMethod:
         if not self.func_args_std:
             for arg_name in self.func_args:
                 self.func_args_std[arg_name] = self.func_arg_type[arg_name](0)
-
-    def gen_report_str(self, argument_values: List[Any]) -> str:
-        args_str = DELIMITER.join(map(str, argument_values))
-        return self.name + DELIMITER + args_str
 
     def augment_image_no_random(self, pil_im: Image) -> Image:
         if self.aug_mode == AugMode.NotActive:
@@ -64,10 +57,32 @@ class AugmentationMethod:
                 return self.augment_image_no_random(pil_im)
             # self.aug_mode == AugMode.Random
             if get_true_on_probability(self.use_aug_at_probability):
-                func_arg_values = [val for key, val in self.func_args.items()]
+                func_args_randomized = self.get_func_args_randomized()
+                func_arg_values = [val for key, val in func_args_randomized.items()]
                 report_str = self.gen_report_str(func_arg_values)
-                return self.func(pil_im, **self.func_args), report_str
+                return self.func(pil_im, **func_args_randomized), report_str
         return pil_im, ""
+
+    def get_func_args_randomized(self) -> Dict[str, Any]:
+        func_args_randomized = self.func_args.copy()
+        for arg_name, arg_val in func_args_randomized.items():
+            print(f"{arg_name}, {arg_val}, {type(arg_val)}, {isinstance(type(arg_val), int)}")
+            if isinstance(arg_val, int):
+                print("in here")
+                rand_val = np.random.randint(-self.func_args_std[arg_name], self.func_args_std[arg_name] + 1)
+            else:
+                print("in there")
+                rand_val = np.random.uniform(-self.func_args_std[arg_name], self.func_args_std[arg_name])
+            func_args_randomized[arg_name] = arg_val + rand_val
+        return func_args_randomized
+
+    def gen_report_str(self, argument_values: List[Any]) -> str:
+        args_str = DELIMITER.join(map(self.int_or_float_to_str, argument_values))
+        return self.name + DELIMITER + args_str
+
+    @staticmethod
+    def int_or_float_to_str(x: Any) -> str:
+        return str(x) if isinstance(x, int) else f"{x:.3}"
 
 
 @dataclass
@@ -118,6 +133,7 @@ class AugmentationUtils:
         kernel_motion_blur[int((radius - 1) / 2), :] = np.ones(radius)
         kernel_motion_blur = kernel_motion_blur / radius
         input_np_im = np.array(input_im)
+        # noinspection PyUnresolvedReferences
         output_np_im = cv2.filter2D(input_np_im, -1, kernel_motion_blur)
         return PIL.Image.fromarray(output_np_im)
 
