@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Set, Dict
 import re
 
-from Tagometer.gtag_config import GtagConfig
+from KMUtils.Tagometer.gtag_config import GtagConfig
 
 
 class GtagBackEndException(Exception):
@@ -26,7 +26,7 @@ def get_id_from_file_name(file_name: str) -> int:
 def create_new_labeled_file_name(old_name: str, label: str) -> str:
     old_label = get_label_from_file_name(old_name)
     if old_name.count(old_label) != 1:
-        raise NotImplementedError("File name should have only one occurance of label")
+        raise NotImplementedError("File name should have only one occurrence of label")
     return old_name.replace(old_label, label)
 
 
@@ -62,7 +62,7 @@ class LabelTrackedFile:
         self.file_name = new_file_name
         self.is_labeled = True
 
-    def unlabel_file(self) -> None:
+    def un_label_file(self) -> None:
         if self.is_labeled:
             unlabeled_file_name = create_new_labeled_file_name(self.file_name, GtagConfig.default_label)
             rename_file(self.file_name, unlabeled_file_name, self.file_dir)
@@ -90,13 +90,13 @@ class LabelledObject:
                                        f"has multiple labels: {all_file_labels_set}")
         self.label = all_file_labels_set.pop()
 
-    def unlabel_object(self):
+    def un_label_object(self):
         self.label = GtagConfig.default_label
         for labeled_file in self.file_list:
-            labeled_file.unlabel_file()
+            labeled_file.un_label_file()
 
     def label_object(self, label: str, subset_to_label: Optional[List[int]] = None) -> None:
-        self.unlabel_object()
+        self.un_label_object()
         for file_num, label_tracked_file in enumerate(self.file_list):
             if subset_to_label is None or file_num in subset_to_label:
                 label_tracked_file.label_file(label)
@@ -168,7 +168,7 @@ class GtagBackEnd(object):
     def move_current_object_to_garbage(self) -> None:
         # TODO: add track of total num of files + num of labeled files
         for file_path in self.get_current_object_file_paths():
-            move_file(file_path, GtagConfig.garbadge_dir)
+            move_file(file_path, GtagConfig.garbage_dir)
         del self.obj_list[self.idx]
 
     def get_current_object_label(self) -> str:
@@ -181,11 +181,11 @@ class GtagBackEnd(object):
         current_object = self._get_current_object()
         current_object.label_object(label, subset_to_label)
 
-    def unlabel_current_object(self) -> None:
+    def un_label_current_object(self) -> None:
         current_object = self._get_current_object()
         if current_object.label != GtagConfig.default_label:
             self.unique_labels_set.remove(current_object.label)
-        current_object.unlabel_object()
+        current_object.un_label_object()
 
     def get_num_unique_labels(self) -> int:
         return len(self.unique_labels_set)

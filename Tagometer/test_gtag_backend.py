@@ -12,8 +12,8 @@ import pytest
 import logging
 import shutil
 
-from Tagometer.gtag_config import GtagConfig
-from Tagometer.gtag_backend import GtagBackEnd
+from KMUtils.Tagometer.gtag_config import GtagConfig
+from KMUtils.Tagometer.gtag_backend import GtagBackEnd
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s, %(threadName)s, %(name)s, "%(message)s"',
                     level=logging.DEBUG,
@@ -115,10 +115,10 @@ class TestGtagBackEnd(object):
         relabeled_files = self._get_labeled_files()
         assert len(relabeled_files) == 1
 
-    def test_unlabel_object(self):
+    def test_un_label_object(self):
         gtag = GtagBackEnd(self.WORKING_DIR)
         gtag.set_current_object_label(self.TEST_LABEL)
-        gtag.unlabel_current_object()
+        gtag.un_label_current_object()
         labeled_files = self._get_labeled_files()
         assert len(labeled_files) == 0
 
