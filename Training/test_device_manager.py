@@ -1,7 +1,6 @@
 import time
-import unittest
 import threading
-from Training.device_manager import DeviceManager, NoAvailableDeviceTimeoutException
+from KMUtils.Training.device_manager import DeviceManager, NoAvailableDeviceTimeoutException
 import logging
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s, %(threadName)s, %(name)s, "%(message)s"',
