@@ -106,17 +106,17 @@ class DataAugmentationGUI(object):
                 self.display_randomly_augmented_images(input_im)
 
     @staticmethod
-    def display_original_image(input_im: Image, image_name: str):
+    def display_original_image(input_im: Image.Image, image_name: str):
         add_centered_text(f"Original Image: {image_name}")
         st.image(input_im, use_column_width=True)
         return input_im
 
-    def display_augmented_image(self, input_im: Image):
+    def display_augmented_image(self, input_im: Image.Image):
         add_centered_text(f"Image After Augmentation")
         aug_im, im_name = self.augment_main_image(input_im)
         st.image(aug_im, use_column_width=True, caption=im_name)
 
-    def display_randomly_augmented_images(self, input_im: Image):
+    def display_randomly_augmented_images(self, input_im: Image.Image):
         st.title(f"How many images to Synthesis?")
         st.write("##")
         st.number_input("", value=DEFAULT_NUM_OF_IMAGES, key="num_im", min_value=MIN_NUM_IMAGES, step=NUM_IM_STEP)
@@ -131,12 +131,12 @@ class DataAugmentationGUI(object):
                 idx += 1
 
     @staticmethod
-    def augment_main_image(input_im: Image):
+    def augment_main_image(input_im: Image.Image):
         aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im, random=False)
         return aug_im, im_name
 
     @staticmethod
-    def augment_sub_images(input_im: Image):
+    def augment_sub_images(input_im: Image.Image):
         aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im, random=True)
         return aug_im, im_name
 

@@ -1,5 +1,5 @@
 import threading
-from typing import Union
+from typing import Union, Optional
 import torch
 import time
 
@@ -23,13 +23,14 @@ class DeviceManagerException(Exception):
 class DeviceManager(object):
     def __init__(self, timeout_sec: Union[int, None] = GET_AVAILABLE_DEVICE_TIMEOUT_SEC):
         self.timeout_sec = timeout_sec
-        self.device_id = None
+        self.device_id: Optional[int] = None
 
     def __enter__(self):
         self.device_id = self.acquire_device_timeout(self.timeout_sec)
         return torch.device(CUDA_STR + str(self.device_id))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        assert self.device_id is not None
         self.release_device(self.device_id)
 
     def acquire_device_timeout(self, timeout_sec: Union[int, None]) -> int:
