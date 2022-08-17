@@ -51,7 +51,7 @@ class LabelTrackedFile:
     is_labeled: bool = field(init=False)
     obj_id: int = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         label = get_label_from_file_name(self.file_name)
         self.obj_id = get_id_from_file_name(self.file_name)
         self.is_labeled = label != GtagConfig.default_label
@@ -77,7 +77,7 @@ class LabelledObject:
     # The label is learned during the post_init function
     label: str = field(init=False, default=GtagConfig.default_label)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         all_file_labels = [get_label_from_file_name(labeled_file.file_name) for labeled_file in self.file_list]
         all_file_labels_set = set(all_file_labels)
         if all_file_labels_set == {GtagConfig.default_label}:
@@ -90,7 +90,7 @@ class LabelledObject:
                                        f"has multiple labels: {all_file_labels_set}")
         self.label = all_file_labels_set.pop()
 
-    def un_label_object(self):
+    def un_label_object(self) -> None:
         self.label = GtagConfig.default_label
         for labeled_file in self.file_list:
             labeled_file.un_label_file()
@@ -102,7 +102,7 @@ class LabelledObject:
                 label_tracked_file.label_file(label)
         self.label = label
 
-    def get_num_of_labeled_files(self):
+    def get_num_of_labeled_files(self) -> int:
         return len([labeled_file for labeled_file in self.file_list if labeled_file.is_labeled])
 
 
