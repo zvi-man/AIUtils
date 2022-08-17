@@ -14,11 +14,6 @@ MIN_NUM_IMAGES = 0
 NUM_IMAGES_ROW = 5
 
 
-def load_image(image_file: str) -> Image.Image:
-    img = Image.open(image_file)
-    return img
-
-
 def add_centered_title(title: str) -> None:
     st.markdown(f"<h1 style='text-align: center;'>{title}</h1>", unsafe_allow_html=True)
 
@@ -99,7 +94,7 @@ class DataAugmentationGUI(object):
                                                    accept_multiple_files=False)
             # st.write(st.session_state.augmentation_pipe)
             if original_image_path is not None:
-                input_im = load_image(str(original_image_path))
+                input_im = Image.open(original_image_path)
                 self.display_original_image(input_im, original_image_path.name)
                 st.write("##")
                 self.display_augmented_image(input_im)

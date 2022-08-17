@@ -4,6 +4,7 @@ import torch
 import time
 
 # Constants
+# NUM_OF_DEVICES = 5
 NUM_OF_DEVICES = torch.cuda.device_count()
 DEVICE_AVAILABLE_LIST = [True for _ in range(NUM_OF_DEVICES)]
 DEVICE_LIST_LOCK = threading.Lock()
