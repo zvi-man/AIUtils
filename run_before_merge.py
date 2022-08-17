@@ -5,7 +5,7 @@ from mypy import api
 REQUIREMENTS_FILE_NAME = "Requirements.txt"
 REQUIREMENTS_CMD = ["pip", "freeze", ">", REQUIREMENTS_FILE_NAME]
 # MYPY_CMD = ["--check-untyped-defs", "--ignore-missing-imports", "../KMUtils"]
-MYPY_CMD = ["--check-untyped-defs", "KMUtils"]
+MYPY_CMD = ["--check-untyped-defs", "../KMUtils"]
 
 
 def create_requirements_file():
@@ -33,5 +33,5 @@ def run_mypy_test() -> None:
 
 
 if __name__ == '__main__':
-    # create_requirements_file()
+    create_requirements_file()
     run_mypy_test()
