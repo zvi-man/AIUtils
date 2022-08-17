@@ -36,7 +36,7 @@ class AugmentationMethod:
     use_aug_at_probability: float = 0.5
     func_arg_type: Dict[str, type] = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.func_arg_type = dict()
         for arg_name, arg_val in self.func_args.items():
             self.func_arg_type[arg_name] = type(arg_val)

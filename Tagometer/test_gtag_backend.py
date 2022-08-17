@@ -6,7 +6,7 @@
 # 5. read file with predicted labels and offer the user to select them
 # 6. set images as garbage and move the files to garbage dir
 from random import randint
-from typing import List, Dict
+from typing import List, Dict, Generator
 import os
 import pytest
 import logging
@@ -53,7 +53,7 @@ class TestGtagBackEnd(object):
     }
 
     @pytest.fixture(autouse=True)
-    def _init_working_dir(self):
+    def _init_working_dir(self) -> Generator:
         os.mkdir(self.WORKING_DIR)
         init_working_dir(self.WORKING_DIR, self.BASIC_WORKING_DIR_STRUCTURE)
         yield
@@ -63,13 +63,13 @@ class TestGtagBackEnd(object):
         return [file_name for file_name in os.listdir(self.WORKING_DIR)
                 if self.TEST_LABEL in file_name]
 
-    def test_init_success(self):
+    def test_init_success(self) -> None:
         gtag = GtagBackEnd(self.WORKING_DIR)
         assert gtag.num_of_labeled_files == 0
         assert gtag.total_num_of_files == 15
         assert gtag.get_num_unique_labels() == 0
 
-    def test_browse_through_objects(self):
+    def test_browse_through_objects(self) -> None:
         gtag = GtagBackEnd(self.WORKING_DIR)
         assert gtag.prev_object() is False
         assert gtag.next_object() is True
@@ -85,7 +85,7 @@ class TestGtagBackEnd(object):
         assert gtag.next_object() is True
         assert gtag.next_object() is False
 
-    def test_label_object(self):
+    def test_label_object(self) -> None:
         gtag = GtagBackEnd(self.WORKING_DIR)
         gtag.next_object()
         gtag.next_object()
@@ -95,7 +95,7 @@ class TestGtagBackEnd(object):
         relabeled_files = self._get_labeled_files()
         assert len(relabeled_files) == 3
 
-    def test_label_object_subset(self):
+    def test_label_object_subset(self) -> None:
         gtag = GtagBackEnd(self.WORKING_DIR)
         gtag.next_object()
         gtag.next_object()
@@ -115,23 +115,23 @@ class TestGtagBackEnd(object):
         relabeled_files = self._get_labeled_files()
         assert len(relabeled_files) == 1
 
-    def test_un_label_object(self):
+    def test_un_label_object(self) -> None:
         gtag = GtagBackEnd(self.WORKING_DIR)
         gtag.set_current_object_label(self.TEST_LABEL)
         gtag.un_label_current_object()
         labeled_files = self._get_labeled_files()
         assert len(labeled_files) == 0
 
-    def test_unique_labels_count(self):
+    def test_unique_labels_count(self) -> None:
         pass
 
-    def test_num_labeled_files(self):
+    def test_num_labeled_files(self) -> None:
         pass
 
-    def test_total_num_files(self):
+    def test_total_num_files(self) -> None:
         pass
 
-    def test_move_object_to_garbage(self):
+    def test_move_object_to_garbage(self) -> None:
         gtag = GtagBackEnd(self.WORKING_DIR)
         gtag.move_current_object_to_garbage()
 

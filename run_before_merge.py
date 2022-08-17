@@ -4,11 +4,10 @@ from mypy import api
 # Constants
 REQUIREMENTS_FILE_NAME = "Requirements.txt"
 REQUIREMENTS_CMD = ["pip", "freeze", ">", REQUIREMENTS_FILE_NAME]
-# MYPY_CMD = ["--check-untyped-defs", "--ignore-missing-imports", "../KMUtils"]
-MYPY_CMD = ["--check-untyped-defs", "../KMUtils"]
+MYPY_CMD = ["../KMUtils"]
 
 
-def create_requirements_file():
+def create_requirements_file() -> None:
     with Popen(REQUIREMENTS_CMD, stdout=PIPE) as proc:
         assert proc.stdout is not None
         requirements = proc.stdout.read()

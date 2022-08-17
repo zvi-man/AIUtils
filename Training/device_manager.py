@@ -1,5 +1,5 @@
 import threading
-from typing import Union, Optional
+from typing import Union, Optional, Any
 import torch
 import time
 
@@ -25,11 +25,11 @@ class DeviceManager(object):
         self.timeout_sec = timeout_sec
         self.device_id: Optional[int] = None
 
-    def __enter__(self):
+    def __enter__(self) -> torch.device:
         self.device_id = self.acquire_device_timeout(self.timeout_sec)
         return torch.device(CUDA_STR + str(self.device_id))
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         assert self.device_id is not None
         self.release_device(self.device_id)
 
@@ -60,5 +60,5 @@ class DeviceManager(object):
             DEVICE_AVAILABLE_LIST[device_id] = True
 
     @staticmethod
-    def is_device_available():
+    def is_device_available() -> bool:
         return any(DEVICE_AVAILABLE_LIST)

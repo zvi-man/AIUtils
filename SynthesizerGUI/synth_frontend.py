@@ -1,3 +1,4 @@
+from typing import Tuple
 import streamlit as st
 from PIL import Image
 
@@ -13,27 +14,27 @@ MIN_NUM_IMAGES = 0
 NUM_IMAGES_ROW = 5
 
 
-def load_image(image_file):
+def load_image(image_file: str) -> Image.Image:
     img = Image.open(image_file)
     return img
 
 
-def add_centered_title(title: str):
+def add_centered_title(title: str) -> None:
     st.markdown(f"<h1 style='text-align: center;'>{title}</h1>", unsafe_allow_html=True)
 
 
-def add_centered_text(text: str):
+def add_centered_text(text: str) -> None:
     st.markdown(f"<p style='text-align: center;'><strong>{text}</strong></p>", unsafe_allow_html=True)
 
 
 class DataAugmentationGUI(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self.init_session_state()
         self.init_sidebar()
         self.init_main_window()
 
     @staticmethod
-    def init_session_state():
+    def init_session_state() -> None:
         if 'augmentation_pipe' not in st.session_state:
             st.session_state.augmentation_pipe = init_aug_pipe()
             for aug_method in st.session_state.augmentation_pipe.augmentation_list:
@@ -49,7 +50,7 @@ class DataAugmentationGUI(object):
                         st.session_state[f"{aug_method.name}, {arg_name} std default val"] = arg_std
 
     @staticmethod
-    def init_sidebar():
+    def init_sidebar() -> None:
         with st.sidebar:
             st.title("Select Image Augmentations")
             for aug_method in st.session_state.augmentation_pipe.augmentation_list:
@@ -89,7 +90,7 @@ class DataAugmentationGUI(object):
                             aug_method.func_args_std[arg_name] = new_func_arg_std
                 st.write("##")
 
-    def init_main_window(self):
+    def init_main_window(self) -> None:
         window = st.container()
         with window:
             add_centered_title("The Synthesizer")
@@ -98,7 +99,7 @@ class DataAugmentationGUI(object):
                                                    accept_multiple_files=False)
             # st.write(st.session_state.augmentation_pipe)
             if original_image_path is not None:
-                input_im = load_image(original_image_path)
+                input_im = load_image(str(original_image_path))
                 self.display_original_image(input_im, original_image_path.name)
                 st.write("##")
                 self.display_augmented_image(input_im)
@@ -106,17 +107,17 @@ class DataAugmentationGUI(object):
                 self.display_randomly_augmented_images(input_im)
 
     @staticmethod
-    def display_original_image(input_im: Image.Image, image_name: str):
+    def display_original_image(input_im: Image.Image, image_name: str) -> Image.Image:
         add_centered_text(f"Original Image: {image_name}")
         st.image(input_im, use_column_width=True)
         return input_im
 
-    def display_augmented_image(self, input_im: Image.Image):
+    def display_augmented_image(self, input_im: Image.Image) -> None:
         add_centered_text(f"Image After Augmentation")
         aug_im, im_name = self.augment_main_image(input_im)
         st.image(aug_im, use_column_width=True, caption=im_name)
 
-    def display_randomly_augmented_images(self, input_im: Image.Image):
+    def display_randomly_augmented_images(self, input_im: Image.Image) -> None:
         st.title(f"How many images to Synthesis?")
         st.write("##")
         st.number_input("", value=DEFAULT_NUM_OF_IMAGES, key="num_im", min_value=MIN_NUM_IMAGES, step=NUM_IM_STEP)
@@ -131,12 +132,12 @@ class DataAugmentationGUI(object):
                 idx += 1
 
     @staticmethod
-    def augment_main_image(input_im: Image.Image):
+    def augment_main_image(input_im: Image.Image) -> Tuple[Image.Image, str]:
         aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im, random=False)
         return aug_im, im_name
 
     @staticmethod
-    def augment_sub_images(input_im: Image.Image):
+    def augment_sub_images(input_im: Image.Image) -> Tuple[Image.Image, str]:
         aug_im, im_name = st.session_state.augmentation_pipe.augment_image(input_im, random=True)
         return aug_im, im_name
 
