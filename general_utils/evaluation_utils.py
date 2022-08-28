@@ -1,10 +1,12 @@
-from typing import Callable
+from typing import Callable, Set
 import torch
 from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataset import T_co
 import torch.nn.functional as F
 
+from KMUtils.general_utils.dataset_utils import DatasetUtils
+from KMUtils.general_utils.lp_utils import LPUtils
 from KMUtils.general_utils.model_combiner import ModelCombiner
 
 # Constants
@@ -14,8 +16,9 @@ DEFAULT_BATCH_SIZE = 32
 class EvaluationUtils(object):
     @staticmethod
     def eval_model(model: Module, dataset: Dataset,
-                   accuracy_func: Callable, batch_size: DEFAULT_BATCH_SIZE,
-                   device: torch.device) -> float:
+                   accuracy_func: Callable,
+                   device: torch.device,
+                   batch_size: int = DEFAULT_BATCH_SIZE) -> float:
         validation_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         model.eval()
         total_num_images = 0
@@ -32,8 +35,19 @@ class EvaluationUtils(object):
         return final_accuracy
 
     @staticmethod
-    def get_tracklet_recall():
-        pass
+    def get_tracklet_recall(model: Module, lp_dir_path: str, label_accuracy_func: Callable,
+                            device: torch.device, batch_size: int = DEFAULT_BATCH_SIZE) -> float:
+        labeled_tracklet_ids_set: Set = LPUtils().get_labeled_tracklet_ids(lp_dir_path)
+        tracklet_success_counter: int = 0
+        for tracklet_id in labeled_tracklet_ids_set:
+            tracklet_dataset: Dataset = DatasetUtils.get_tracklet_dataset(lp_dir_path, tracklet_id)
+            tracklet_acc = EvaluationUtils.eval_model(model, dataset=tracklet_dataset,
+                                                      accuracy_func=label_accuracy_func, device=device,
+                                                      batch_size=batch_size)
+            if tracklet_acc > 0.0:
+                tracklet_success_counter += 1
+
+        return tracklet_success_counter / len(labeled_tracklet_ids_set)
 
 
 # Code to evaluate "eval_model" func

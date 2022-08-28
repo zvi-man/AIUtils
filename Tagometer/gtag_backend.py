@@ -11,6 +11,14 @@ class GtagBackEndException(Exception):
     pass
 
 
+def init_lp_utils_with_config_params() -> LPUtils:
+    return LPUtils(delimiter_pat=GtagConfig.delimiter_pat,
+                   label_location_in_file_name=GtagConfig.label_location_in_file_name,
+                   id_location_in_file_name=GtagConfig.id_location_in_file_name,
+                   default_label=GtagConfig.default_label,
+                   acceptable_file_types=GtagConfig.acceptable_file_types)
+
+
 def rename_file(old_file_name: str, new_file_name: str, containing_dir: Optional[str] = None) -> None:
     if containing_dir is not None:
         old_file_name = os.path.join(containing_dir, old_file_name)
@@ -33,9 +41,7 @@ class LabelTrackedFile:
     obj_id: int = field(init=False)
 
     def __post_init__(self) -> None:
-        self.lp_utils = LPUtils(delimiter_pat=GtagConfig.delimiter_pat,
-                                label_location_in_file_name=GtagConfig.label_location_in_file_name,
-                                id_location_in_file_name=GtagConfig.id_location_in_file_name)
+        self.lp_utils = init_lp_utils_with_config_params()
         label = self.lp_utils.get_label_from_file_name(self.file_name)
         self.obj_id = self.lp_utils.get_id_from_file_name(self.file_name)
         self.is_labeled = label != GtagConfig.default_label
@@ -62,9 +68,7 @@ class LabelledObject:
     label: str = field(init=False, default=GtagConfig.default_label)
 
     def __post_init__(self) -> None:
-        self.lp_utils = LPUtils(delimiter_pat=GtagConfig.delimiter_pat,
-                                label_location_in_file_name=GtagConfig.label_location_in_file_name,
-                                id_location_in_file_name=GtagConfig.id_location_in_file_name)
+        self.lp_utils = init_lp_utils_with_config_params()
         all_file_labels = [self.lp_utils.get_label_from_file_name(labeled_file.file_name) for labeled_file in self.file_list]
         all_file_labels_set = set(all_file_labels)
         if all_file_labels_set == {GtagConfig.default_label}:
@@ -96,9 +100,7 @@ class LabelledObject:
 class GtagBackEnd(object):
     def __init__(self, working_dir: str = GtagConfig.working_dir):
         # TODO: add default label attribute
-        self.lp_utils = LPUtils(delimiter_pat=GtagConfig.delimiter_pat,
-                                label_location_in_file_name=GtagConfig.label_location_in_file_name,
-                                id_location_in_file_name=GtagConfig.id_location_in_file_name)
+        self.lp_utils = init_lp_utils_with_config_params()
         self.idx: int = 0
         self.working_dir: str = working_dir
         self.total_num_of_files: int = 0
