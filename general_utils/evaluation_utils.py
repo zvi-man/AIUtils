@@ -12,6 +12,7 @@ DEFAULT_BATCH_SIZE = 32
 class EvaluationUtils(object):
     @staticmethod
     def eval_two_models(model1: Module, model2: Module, dataset: Dataset,
+                        combine_func: Callable,
                         accuracy_func: Callable, batch_size: DEFAULT_BATCH_SIZE,
                         device: torch.device) -> float:
         validation_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
@@ -26,7 +27,8 @@ class EvaluationUtils(object):
             labels = labels.to(device)
             model1_output = model1(images)
             model2_output = model2(images)
-            current_accuracy = accuracy_func(model1_output, model2_output, labels)
+            combined_output = combine_func(model1_output, model2_output)
+            current_accuracy = accuracy_func(combined_output, labels)
             aggregate_accuracy += current_accuracy * num_images_in_batch
 
         final_accuracy = aggregate_accuracy / total_num_images
@@ -44,7 +46,7 @@ class RandomDataSet(Dataset):
         rand_tensor[:4, 9:] = 0
         rand_label = rand_tensor.argmax(dim=1)
         # if index % 10 == 0:
-        #     rand_label += 1
+        #     rand_label[0] += 1
         return rand_tensor, rand_label
 
 
@@ -89,7 +91,8 @@ if __name__ == '__main__':
     first_model = Model1()
     second_model = Model2()
     accuracy = EvaluationUtils.eval_two_models(first_model, second_model, dataset=random_dataset,
-                                               accuracy_func=two_model_accuracy,
+                                               combine_func=combine_outputs,
+                                               accuracy_func=label_accuracy,
                                                batch_size=32,
                                                device=torch.device('cpu'))
     print(f"final accuracy {accuracy}")
