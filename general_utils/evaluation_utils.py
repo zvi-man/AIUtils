@@ -34,6 +34,30 @@ class EvaluationUtils(object):
         final_accuracy = aggregate_accuracy / total_num_images
         return final_accuracy
 
+    @staticmethod
+    def eval_model(model: Module, dataset: Dataset,
+                   accuracy_func: Callable, batch_size: DEFAULT_BATCH_SIZE,
+                   device: torch.device) -> float:
+        validation_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        model.eval()
+        total_num_images = 0
+        aggregate_accuracy = 0.0
+        for batch_num, (images, labels) in enumerate(validation_loader):
+            num_images_in_batch = images.shape[0]
+            total_num_images += num_images_in_batch
+            images = images.to(device)
+            labels = labels.to(device)
+            output = model(images)
+            current_accuracy = accuracy_func(output, labels)
+            aggregate_accuracy += current_accuracy * num_images_in_batch
+        final_accuracy = aggregate_accuracy / total_num_images
+        return final_accuracy
+
+    @staticmethod
+    def get_tracklet_recall():
+        pass
+
+
 # Code to evaluate eval_two_models func
 
 
@@ -45,7 +69,7 @@ class RandomDataSet(Dataset):
         rand_tensor = torch.randn(7, 18) + 10
         rand_tensor[:4, 9:] = 0
         rand_label = rand_tensor.argmax(dim=1)
-        # if index % 10 == 0:
+        # if index % 2 == 0:
         #     rand_label[0] += 1
         return rand_tensor, rand_label
 
