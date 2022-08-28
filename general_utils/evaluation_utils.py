@@ -5,6 +5,8 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataset import T_co
 import torch.nn.functional as F
 
+from KMUtils.general_utils.model_combiner import ModelCombiner
+
 # Constants
 DEFAULT_BATCH_SIZE = 32
 
@@ -115,8 +117,13 @@ if __name__ == '__main__':
     first_model = Model1()
     second_model = Model2()
     accuracy = EvaluationUtils.eval_two_models(first_model, second_model, dataset=random_dataset,
-                                               combine_func=combine_outputs,
                                                accuracy_func=label_accuracy,
-                                               batch_size=32,
-                                               device=torch.device('cpu'))
-    print(f"final accuracy {accuracy}")
+                                               combine_func=combine_outputs,
+                                               batch_size=32, device=torch.device('cpu'))
+    print(f"final accuracy of 'eval_two_models' {accuracy}")
+
+    combined_model = ModelCombiner(first_model, second_model, combine_outputs)
+    accuracy = EvaluationUtils.eval_model(combined_model, dataset=random_dataset,
+                                          accuracy_func=label_accuracy,
+                                          batch_size=32, device=torch.device('cpu'))
+    print(f"final accuracy of 'eval_model' {accuracy}")
