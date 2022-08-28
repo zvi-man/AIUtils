@@ -1,6 +1,6 @@
 import os
 import re
-from typing import List
+from typing import List, Set
 
 # Constants
 DEFAULT_LABEL: str = "AAAAAA"
@@ -42,12 +42,12 @@ class LPUtils(object):
         label = self.get_label_from_file_name(file_name)
         return label != self.default_label
 
-    def get_labeled_tracklet_ids(self, lp_dir_path: str):
+    def get_labeled_tracklet_ids(self, lp_dir_path: str) -> Set[int]:
         labeled_tracklet_ids = set()
         for file_name in os.scandir(lp_dir_path):
-            if os.path.splitext(file_name)[1] in self.acceptable_file_types:
-                if self.is_file_labeled(file_name):
-                    labeled_tracklet_ids.add(self.get_id_from_file_name(file_name))
+            if os.path.splitext(file_name.name)[1] in self.acceptable_file_types:
+                if self.is_file_labeled(file_name.name):
+                    labeled_tracklet_ids.add(self.get_id_from_file_name(file_name.name))
         return labeled_tracklet_ids
 
 

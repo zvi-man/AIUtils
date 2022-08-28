@@ -1,4 +1,4 @@
-from typing import Callable, Set
+from typing import Callable, Set, Tuple
 import torch
 from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
@@ -52,10 +52,10 @@ class EvaluationUtils(object):
 
 # Code to evaluate "eval_model" func
 class RandomDataSet(Dataset):
-    def __len__(self):
+    def __len__(self) -> int:
         return 100
 
-    def __getitem__(self, index) -> T_co:
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         rand_tensor = torch.randn(7, 18) + 10
         rand_tensor[:4, 9:] = 0
         rand_label = rand_tensor.argmax(dim=1)
@@ -66,7 +66,7 @@ class RandomDataSet(Dataset):
 
 class Model1(Module):
     @staticmethod
-    def forward(x):
+    def forward(x: torch.Tensor) -> torch.Tensor:
         x = x.clone()
         x[:, 4:, :] = 0
         return x[:, :, :9]
@@ -74,20 +74,20 @@ class Model1(Module):
 
 class Model2(Module):
     @staticmethod
-    def forward(x):
+    def forward(x: torch.Tensor) -> torch.Tensor:
         x = x.clone()
         x[:, :4, :] = 0
         return x
 
 
-def label_accuracy(output: torch.tensor, labels: torch.tensor) -> float:
+def label_accuracy(output: torch.Tensor, labels: torch.Tensor) -> float:
     output_labels = output.argmax(dim=2)
     num_labels = labels.shape[0]
     num_correct_labels = output_labels.eq(labels).all(dim=1).sum().item()
-    return num_correct_labels / num_labels
+    return float(num_correct_labels / num_labels)
 
 
-def combine_outputs(output1: torch.tensor, output2: torch.tensor) -> torch.tensor:
+def combine_outputs(output1: torch.Tensor, output2: torch.Tensor) -> torch.Tensor:
     output1_shape = output1.shape
     output2_shape = output2.shape
     padding = output2_shape[2] - output1_shape[2]
