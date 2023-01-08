@@ -1,10 +1,23 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 class PlotUtils(object):
+    @staticmethod
+    def plot_precision_recall_curve(precision_list: List[float], recall_list: List[float],
+                                    title: str = "Precision-Recall Curve",
+                                    axes: Optional[plt.Axes] = None, do_show: bool = True) -> Optional[plt.Axes]:
+        if not axes:
+            _, axes = plt.subplots(1)
+        plt.plot(recall_list, precision_list)
+        plt.xlabel("Recall")
+        plt.ylabel("Precision")
+        plt.title(title)
+        if do_show:
+            plt.show()
+        return axes
 
     @staticmethod
     def plot_single_roc_curve(fpr: np.ndarray, tpr: np.ndarray,
