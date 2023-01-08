@@ -1,10 +1,12 @@
-from typing import Callable
+from typing import Callable, Set, Tuple
 import torch
 from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataset import T_co
 import torch.nn.functional as F
 
+from KMUtils.general_utils.dataset_utils import DatasetUtils
+from KMUtils.general_utils.lp_utils import LPUtils
 from KMUtils.general_utils.model_combiner import ModelCombiner
 
 # Constants
@@ -14,8 +16,9 @@ DEFAULT_BATCH_SIZE = 32
 class EvaluationUtils(object):
     @staticmethod
     def eval_model(model: Module, dataset: Dataset,
-                   accuracy_func: Callable, batch_size: DEFAULT_BATCH_SIZE,
-                   device: torch.device) -> float:
+                   accuracy_func: Callable,
+                   device: torch.device,
+                   batch_size: int = DEFAULT_BATCH_SIZE) -> float:
         validation_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         model.eval()
         total_num_images = 0
@@ -32,16 +35,27 @@ class EvaluationUtils(object):
         return final_accuracy
 
     @staticmethod
-    def get_tracklet_recall():
-        pass
+    def get_tracklet_recall(model: Module, lp_dir_path: str, label_accuracy_func: Callable,
+                            device: torch.device, batch_size: int = DEFAULT_BATCH_SIZE) -> float:
+        labeled_tracklet_ids_set: Set = LPUtils().get_labeled_tracklet_ids(lp_dir_path)
+        tracklet_success_counter: int = 0
+        for tracklet_id in labeled_tracklet_ids_set:
+            tracklet_dataset: Dataset = DatasetUtils.get_tracklet_dataset(lp_dir_path, tracklet_id)
+            tracklet_acc = EvaluationUtils.eval_model(model, dataset=tracklet_dataset,
+                                                      accuracy_func=label_accuracy_func, device=device,
+                                                      batch_size=batch_size)
+            if tracklet_acc > 0.0:
+                tracklet_success_counter += 1
+
+        return tracklet_success_counter / len(labeled_tracklet_ids_set)
 
 
 # Code to evaluate "eval_model" func
 class RandomDataSet(Dataset):
-    def __len__(self):
+    def __len__(self) -> int:
         return 100
 
-    def __getitem__(self, index) -> T_co:
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         rand_tensor = torch.randn(7, 18) + 10
         rand_tensor[:4, 9:] = 0
         rand_label = rand_tensor.argmax(dim=1)
@@ -52,7 +66,7 @@ class RandomDataSet(Dataset):
 
 class Model1(Module):
     @staticmethod
-    def forward(x):
+    def forward(x: torch.Tensor) -> torch.Tensor:
         x = x.clone()
         x[:, 4:, :] = 0
         return x[:, :, :9]
@@ -60,20 +74,20 @@ class Model1(Module):
 
 class Model2(Module):
     @staticmethod
-    def forward(x):
+    def forward(x: torch.Tensor) -> torch.Tensor:
         x = x.clone()
         x[:, :4, :] = 0
         return x
 
 
-def label_accuracy(output: torch.tensor, labels: torch.tensor) -> float:
+def label_accuracy(output: torch.Tensor, labels: torch.Tensor) -> float:
     output_labels = output.argmax(dim=2)
     num_labels = labels.shape[0]
     num_correct_labels = output_labels.eq(labels).all(dim=1).sum().item()
-    return num_correct_labels / num_labels
+    return float(num_correct_labels / num_labels)
 
 
-def combine_outputs(output1: torch.tensor, output2: torch.tensor) -> torch.tensor:
+def combine_outputs(output1: torch.Tensor, output2: torch.Tensor) -> torch.Tensor:
     output1_shape = output1.shape
     output2_shape = output2.shape
     padding = output2_shape[2] - output1_shape[2]
