@@ -2,32 +2,21 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Set, Dict
-import re
 
 from KMUtils.Tagometer.gtag_config import GtagConfig
+from KMUtils.general_utils.lp_utils import LPUtils
 
 
 class GtagBackEndException(Exception):
     pass
 
 
-def get_label_from_file_name(file_name: str) -> str:
-    old_name_fields = re.split(GtagConfig.delimiter_pat, file_name)
-    return old_name_fields[GtagConfig.label_location_in_file_name]
-
-
-def get_id_from_file_name(file_name: str) -> int:
-    old_name_fields = re.split(GtagConfig.delimiter_pat, file_name)
-    id_str = old_name_fields[GtagConfig.id_location_in_file_name]
-    id_int = -1 if id_str == "UN" else int(id_str)
-    return id_int
-
-
-def create_new_labeled_file_name(old_name: str, label: str) -> str:
-    old_label = get_label_from_file_name(old_name)
-    if old_name.count(old_label) != 1:
-        raise NotImplementedError("File name should have only one occurrence of label")
-    return old_name.replace(old_label, label)
+def init_lp_utils_with_config_params() -> LPUtils:
+    return LPUtils(delimiter_pat=GtagConfig.delimiter_pat,
+                   label_location_in_file_name=GtagConfig.label_location_in_file_name,
+                   id_location_in_file_name=GtagConfig.id_location_in_file_name,
+                   default_label=GtagConfig.default_label,
+                   acceptable_file_types=GtagConfig.acceptable_file_types)
 
 
 def rename_file(old_file_name: str, new_file_name: str, containing_dir: Optional[str] = None) -> None:
@@ -52,19 +41,20 @@ class LabelTrackedFile:
     obj_id: int = field(init=False)
 
     def __post_init__(self) -> None:
-        label = get_label_from_file_name(self.file_name)
-        self.obj_id = get_id_from_file_name(self.file_name)
+        self.lp_utils = init_lp_utils_with_config_params()
+        label = self.lp_utils.get_label_from_file_name(self.file_name)
+        self.obj_id = self.lp_utils.get_id_from_file_name(self.file_name)
         self.is_labeled = label != GtagConfig.default_label
 
     def label_file(self, label: str) -> None:
-        new_file_name = create_new_labeled_file_name(self.file_name, label)
+        new_file_name = self.lp_utils.create_new_labeled_file_name(self.file_name, label)
         rename_file(self.file_name, new_file_name, self.file_dir)
         self.file_name = new_file_name
         self.is_labeled = True
 
     def un_label_file(self) -> None:
         if self.is_labeled:
-            unlabeled_file_name = create_new_labeled_file_name(self.file_name, GtagConfig.default_label)
+            unlabeled_file_name = self.lp_utils.create_new_labeled_file_name(self.file_name, GtagConfig.default_label)
             rename_file(self.file_name, unlabeled_file_name, self.file_dir)
             self.file_name = unlabeled_file_name
             self.is_labeled = False
@@ -78,7 +68,8 @@ class LabelledObject:
     label: str = field(init=False, default=GtagConfig.default_label)
 
     def __post_init__(self) -> None:
-        all_file_labels = [get_label_from_file_name(labeled_file.file_name) for labeled_file in self.file_list]
+        self.lp_utils = init_lp_utils_with_config_params()
+        all_file_labels = [self.lp_utils.get_label_from_file_name(labeled_file.file_name) for labeled_file in self.file_list]
         all_file_labels_set = set(all_file_labels)
         if all_file_labels_set == {GtagConfig.default_label}:
             self.label = GtagConfig.default_label
@@ -109,6 +100,7 @@ class LabelledObject:
 class GtagBackEnd(object):
     def __init__(self, working_dir: str = GtagConfig.working_dir):
         # TODO: add default label attribute
+        self.lp_utils = init_lp_utils_with_config_params()
         self.idx: int = 0
         self.working_dir: str = working_dir
         self.total_num_of_files: int = 0
@@ -132,7 +124,7 @@ class GtagBackEnd(object):
         for file_name in all_files:
             labeled_file = LabelTrackedFile(file_name, self.working_dir)
             if labeled_file.is_labeled:
-                self.unique_labels_set.add(get_label_from_file_name(labeled_file.file_name))
+                self.unique_labels_set.add(self.lp_utils.get_label_from_file_name(labeled_file.file_name))
                 self.num_of_labeled_files += 1
             if labeled_file.obj_id not in obj_dict:
                 obj_dict[labeled_file.obj_id] = [labeled_file]
@@ -192,4 +184,3 @@ class GtagBackEnd(object):
 
     def get_num_objects(self) -> int:
         return len(self.obj_list)
-
