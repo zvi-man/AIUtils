@@ -1,5 +1,5 @@
 from typing import Optional, Tuple, List, Dict
-from matplotlib.colors import cnames
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -8,7 +8,7 @@ import random
 class PlotUtils(object):
     @staticmethod
     def get_random_n_colors(n: int) -> List[str]:
-        return random.sample(set(cnames.keys()), n)
+        return random.sample(set(mcolors.TABLEAU_COLORS), n)
 
     @classmethod
     def plot_multiple_precision_recall_curves(cls, precision_recall_curves_dict: Dict[str, Tuple[List[float], List[float]]],
@@ -26,10 +26,11 @@ class PlotUtils(object):
         for curve_name in precision_recall_curves_dict:
             precision_list = precision_recall_curves_dict[curve_name][0]
             recall_list = precision_recall_curves_dict[curve_name][1]
-            cls.plot_precision_recall_curve(precision_list, recall_list, title=None,
-                                            colors=colors.pop(), axes=axes, do_show=False)
+            cls.plot_precision_recall_curve(precision_list, recall_list, title=None, label=curve_name,
+                                            color=colors.pop(), axes=axes, do_show=False)
         plt.xlabel("Recall")
         plt.ylabel("Precision")
+        plt.legend()
         plt.title(title)
         if do_show:
             plt.show()
@@ -37,12 +38,15 @@ class PlotUtils(object):
 
     @staticmethod
     def plot_precision_recall_curve(precision_list: List[float], recall_list: List[float],
-                                    title: str = "Precision-Recall Curve",
-                                    color: str = None,
+                                    title: Optional[str] = "Precision-Recall Curve",
+                                    color: str = None, label: str = '',
                                     axes: Optional[plt.Axes] = None, do_show: bool = True) -> Optional[plt.Axes]:
         if not axes:
             _, axes = plt.subplots(1)
-        plt.plot(recall_list, precision_list, c=color, marker='x')
+        if isinstance(recall_list, float) or len(precision_list) == 1:
+            plt.plot(recall_list, precision_list, c=color, marker='o', label=label)
+        else:
+            plt.plot(recall_list, precision_list, c=color, marker='x', label=label)
         plt.xlabel("Recall")
         plt.ylabel("Precision")
         if title:
