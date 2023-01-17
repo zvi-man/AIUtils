@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+   <body>
+      <form action = "http://localhost:5000/uploader" method = "POST"
+         enctype = "multipart/form-data">
+         <label for="video_path_id">Select the input video</label>
+         <input type = "file" id="video_path_id" name = "video_path" />
+         <br>
+         <label for="csv_file_path_id">Select the csv file containing video info</label>
+         <input type = "file" id="csv_file_path_id" name = "csv_file_path" />
+         <br>
+         <input type = "submit"/>
+      </form>
+   </body>
+</html>
