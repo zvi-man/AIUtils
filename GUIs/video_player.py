@@ -1,16 +1,36 @@
 from flask import Flask, render_template, Response
+import pandas as pd
 import cv2
+
+
+def get_video_fps(video_path: str) -> float:
+    vid = cv2.VideoCapture(video_path)
+    fps = vid.get(cv2.CAP_PROP_FPS)
+    vid.release()
+    return fps
+
 
 # Constants
 VIDEO_PATH = r"D:\עבודה צבי\VehicleColorClassification\DataSets\HomeMade1\drive_through_raanana.mp4"
 VIDEO_NAME = r"drive_through_raanana.mp4"
-CSV_PATH = r""
+VIDEO_FPS = get_video_fps(VIDEO_PATH)
+CSV_PATH = r"D:\עבודה צבי\LPRIL\KMUtils\GUIs\static\drive_through_raanana.csv"
+START_FRAME_COL = "start_frame"
+START_TIME_COL = "start_time"
 app = Flask(__name__)
 
 
 @app.route('/')
 def index():
-    return render_template('index.html', video_path=VIDEO_NAME)
+    df = pd.read_csv(CSV_PATH)
+    df[START_TIME_COL] = df[START_FRAME_COL] / VIDEO_FPS
+    table = df.to_html(formatters={START_TIME_COL: format_time})
+    return render_template('index.html', video_path=VIDEO_NAME,
+                           table=table)
+
+
+def format_time(val):
+    return f'<td onclick="alert({val})">{val}</td>'
 
 #
 # def generate():
