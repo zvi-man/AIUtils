@@ -24,13 +24,9 @@ app = Flask(__name__)
 def index():
     df = pd.read_csv(CSV_PATH)
     df[START_TIME_COL] = df[START_FRAME_COL] / VIDEO_FPS
-    table = df.to_html(formatters={START_TIME_COL: format_time})
     return render_template('index.html', video_path=VIDEO_NAME,
-                           table=table)
+                           table=df, titles=df.columns.values, start_time_col_num=6)
 
-
-def format_time(val):
-    return f'<td onclick="alert({val})">{val}</td>'
 
 #
 # def generate():

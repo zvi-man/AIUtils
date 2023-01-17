@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <style>
+      table, th, td {
+        border: 1px solid black;
+      }
+</style>
     <title>Video Player</title>
     <script>
       function updateProgress() {
@@ -19,14 +24,30 @@
   <label for="jump-time">Jump to time (in seconds):</label>
   <input type="number" id="jump-time" min="0" step="1">
   <button onclick="jumpToTime()">Go</button>
- <table>
-    {{ table|safe }}
- </table>
+  <table>
+    {% for title in titles %}
+        <th>{{ title }}</th>
+    {% endfor %}
+    {% for index, row in table.iterrows() %}
+        <tr>
+            {% for val in range(row.array|length) %}
+              {% if val == start_time_col_num %}
+                <td onclick=jumpTo({{row.array[val]}}) style="color:blue;">{{ row.array[val] }}</td>
+              {% else %}
+                <td>{{ row.array[val] }}</td>
+              {% endif %}
+            {% endfor %}
+        </tr>
+    {% endfor %}
+  </table>
   <script>
     var video = document.getElementById("video");
     var jumpTimeInput = document.getElementById("jump-time");
     function jumpToTime() {
       video.currentTime = jumpTimeInput.value;
+    }
+    function jumpTo(time) {
+      video.currentTime = time;
     }
   </script>
   </body>
