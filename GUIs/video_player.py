@@ -1,59 +1,36 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
-from pyglet.media import Source, Player
+from flask import Flask, render_template, Response
+import cv2
+
+# Constants
+VIDEO_PATH = r"D:\עבודה צבי\VehicleColorClassification\DataSets\HomeMade1\drive_through_raanana.mp4"
+CSV_PATH = r""
+app = Flask(__name__)
 
 
-class VideoPlayerApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-        self.title("Video Player")
-        self.geometry("400x300")
 
-        self.player = Player()
-        self.source = Source('path/to/video.mp4')
-        self.player.queue(self.source)
+def generate():
+    cap = cv2.VideoCapture(VIDEO_PATH)
+    while True:
+        ret, frame = cap.read()
+        if ret:
+            ret, jpeg = cv2.imencode('.jpg', frame)
+            if ret:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
+        else:
+            break
+    cap.release()
 
-        self.time_label = ttk.Label(self, text="Time: 0:00")
-        self.time_label.pack()
 
-        self.play_button = ttk.Button(self, text="Play", command=self.play)
-        self.play_button.pack()
-
-        self.pause_button = ttk.Button(self, text="Pause", command=self.pause)
-        self.pause_button.pack()
-
-        self.stop_button = ttk.Button(self, text="Stop", command=self.stop)
-        self.stop_button.pack()
-
-        self.seek_button = ttk.Button(self, text="Seek", command=self.seek)
-        self.seek_button.pack()
-
-    def play(self):
-        self.player.play()
-        self.update_time()
-
-    def pause(self):
-        self.player.pause()
-
-    def stop(self):
-        self.player.stop()
-        self.time_label.config(text="Time: 0:00")
-
-    def seek(self):
-        time = messagebox.askinteger("Seek", "Enter time in seconds:")
-        self.player.seek(time)
-        self.update_time()
-
-    def update_time(self):
-        time = self.player.time
-        minutes = int(time / 60)
-        seconds = int(time % 60)
-        self.time_label.config(text=f"Time: {minutes}:{seconds}")
-        self.after(1000, self.update_time)
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 if __name__ == '__main__':
-    app = VideoPlayerApp()
-    app.mainloop()
+    app.run(host='0.0.0.0', port=5000, debug=True)
