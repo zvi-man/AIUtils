@@ -3,27 +3,30 @@ import cv2
 
 # Constants
 VIDEO_PATH = r"D:\עבודה צבי\VehicleColorClassification\DataSets\HomeMade1\drive_through_raanana.mp4"
+VIDEO_NAME = r"drive_through_raanana.mp4"
 CSV_PATH = r""
 app = Flask(__name__)
 
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', video_path=VIDEO_NAME)
 
-
-def generate():
-    cap = cv2.VideoCapture(VIDEO_PATH)
-    while True:
-        ret, frame = cap.read()
-        if ret:
-            ret, jpeg = cv2.imencode('.jpg', frame)
-            if ret:
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
-        else:
-            break
-    cap.release()
+#
+# def generate():
+#     cap = cv2.VideoCapture(VIDEO_PATH)
+#     duration = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS))
+#     while True:
+#         ret, frame = cap.read()
+#         if ret:
+#             ret, jpeg = cv2.imencode('.jpg', frame)
+#             if ret:
+#                 yield (b'--frame\r\n'
+#                        b'Content-Type: image/jpeg\r\n'
+#                        b'X-Duration: ' + str(duration).encode() + b'\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
+#         else:
+#             break
+#     cap.release()
 
 
 @app.route('/video_feed')
