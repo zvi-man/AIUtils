@@ -5,9 +5,9 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataset import T_co
 import torch.nn.functional as F
 
-from KMUtils.general_utils.dataset_utils import DatasetUtils
-from KMUtils.general_utils.lp_utils import LPUtils
-from KMUtils.general_utils.model_combiner import ModelCombiner
+from KMUtils.GeneralUtils.dataset_utils import DatasetUtils
+from KMUtils.GeneralUtils.lp_utils import LPUtils
+from KMUtils.GeneralUtils.model_combiner import ModelCombiner
 
 # Constants
 DEFAULT_BATCH_SIZE = 32
