@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Callable, List, Any, Dict, Tuple
 from enum import IntEnum
+import torchvision.transforms as T
 
 import PIL
 from PIL import Image, ImageFilter, ImageOps, ImageEnhance
@@ -157,3 +158,9 @@ class AugmentationUtils:
         enhancer = ImageEnhance.Brightness(input_im)
         output_im = enhancer.enhance(brightness_factor)
         return output_im
+
+    @staticmethod
+    def color_jitter(input_im: Image.Image, brightness: float, contrast: float,
+                     saturation: float, hue: float) -> Image.Image:
+        jitter = T.ColorJitter(brightness, contrast, saturation, hue)
+        return jitter(input_im)

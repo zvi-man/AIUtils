@@ -26,4 +26,11 @@ def init_aug_pipe() -> AugmentationPipe:
     motion = AugmentationMethod(name="Motion",
                                 func=AugmentationUtils.motion,
                                 func_args={"radius": 5})
-    return AugmentationPipe([sharpening, blurring, mirror, subsample, brightness, zoom, motion])
+    cj = AugmentationMethod(name="ColorJitter",
+                            func=AugmentationUtils.color_jitter,
+                            func_args={"brightness": 0.15,
+                                       "contrast": 0.15,
+                                       "saturation": 0.1,
+                                       "hue": 0.1,
+                                       })
+    return AugmentationPipe([sharpening, blurring, mirror, subsample, brightness, zoom, motion, cj])
