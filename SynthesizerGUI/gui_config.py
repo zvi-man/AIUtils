@@ -35,6 +35,11 @@ def init_aug_pipe() -> AugmentationPipe:
                             func_args={"brightness": 0.3,
                                        "contrast": 0.3,
                                        "saturation": 0.1,
-                                       "hue": 0.0,
-                                       })
-    return AugmentationPipe([reshape, sharpening, blurring, mirror, subsample, brightness, zoom, motion, cj])
+                                       "hue": 0.0})
+    ra = AugmentationMethod(name="RandomAffine",
+                            func=AugmentationUtils.random_affine,
+                            func_args={"degrees": 10,
+                                       "scale": 0.1,
+                                       "shear": 0.1})
+    return AugmentationPipe([reshape, sharpening, blurring, mirror, subsample, brightness,
+                             zoom, motion, cj, ra])

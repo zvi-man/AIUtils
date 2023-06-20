@@ -169,3 +169,10 @@ class AugmentationUtils:
                      saturation: float, hue: float) -> Image.Image:
         jitter = T.ColorJitter(brightness, contrast, saturation, hue)
         return jitter(input_im)
+
+    @staticmethod
+    def random_affine(input_im: Image.Image, degrees: int = 10,
+                      scale: float = 0.1, shear: float = 0.1) -> Image.Image:
+        affine = T.RandomAffine(degrees=degrees, translate=None, scale=[1 - scale, 1 + scale],
+                                shear=shear, resample=False, fillcolor=0)
+        return affine(input_im)
