@@ -100,6 +100,11 @@ class AugmentationPipe:
 
 
 class AugmentationUtils:
+
+    @staticmethod
+    def reshape(input_im: Image.Image, width: int, height: int) -> Image.Image:
+        return input_im.resize([width, height])
+
     @staticmethod
     def blur(input_im: Image.Image, radius: int) -> Image.Image:
         gaussian_filter = ImageFilter.GaussianBlur(radius=radius)
