@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Set, Dict
 
 from KMUtils.Tagometer.gtag_config import GtagConfig
-from KMUtils.general_utils.lp_utils import LPUtils
+from KMUtils.GeneralUtils.lp_utils import LPUtils
 
 
 class GtagBackEndException(Exception):

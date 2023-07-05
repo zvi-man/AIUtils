@@ -2,9 +2,13 @@ from KMUtils.SynthesizerGUI.synth_backend import AugmentationPipe, AugmentationM
 
 
 def init_aug_pipe() -> AugmentationPipe:
+    reshape = AugmentationMethod(name="Reshape",
+                                 func=AugmentationUtils.reshape,
+                                 func_args={"width": 256,
+                                            "height": 256})
     blurring = AugmentationMethod(name="Blurring",
                                   func=AugmentationUtils.blur,
-                                  func_args={"radius": 5})
+                                  func_args={"radius": 1})
     mirror = AugmentationMethod(name="Mirror",
                                 func=AugmentationUtils.mirror,
                                 func_args={})
@@ -26,4 +30,16 @@ def init_aug_pipe() -> AugmentationPipe:
     motion = AugmentationMethod(name="Motion",
                                 func=AugmentationUtils.motion,
                                 func_args={"radius": 5})
-    return AugmentationPipe([sharpening, blurring, mirror, subsample, brightness, zoom, motion])
+    cj = AugmentationMethod(name="ColorJitter",
+                            func=AugmentationUtils.color_jitter,
+                            func_args={"brightness": 0.3,
+                                       "contrast": 0.3,
+                                       "saturation": 0.1,
+                                       "hue": 0.0})
+    ra = AugmentationMethod(name="RandomAffine",
+                            func=AugmentationUtils.random_affine,
+                            func_args={"degrees": 10,
+                                       "scale": 0.1,
+                                       "shear": 0.1})
+    return AugmentationPipe([reshape, sharpening, blurring, mirror, subsample, brightness,
+                             zoom, motion, cj, ra])

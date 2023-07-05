@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Callable, List, Any, Dict, Tuple
 from enum import IntEnum
+import torchvision.transforms as T
 
 import PIL
 from PIL import Image, ImageFilter, ImageOps, ImageEnhance
@@ -99,6 +100,11 @@ class AugmentationPipe:
 
 
 class AugmentationUtils:
+
+    @staticmethod
+    def reshape(input_im: Image.Image, width: int, height: int) -> Image.Image:
+        return input_im.resize([width, height])
+
     @staticmethod
     def blur(input_im: Image.Image, radius: int) -> Image.Image:
         gaussian_filter = ImageFilter.GaussianBlur(radius=radius)
@@ -157,3 +163,16 @@ class AugmentationUtils:
         enhancer = ImageEnhance.Brightness(input_im)
         output_im = enhancer.enhance(brightness_factor)
         return output_im
+
+    @staticmethod
+    def color_jitter(input_im: Image.Image, brightness: float, contrast: float,
+                     saturation: float, hue: float) -> Image.Image:
+        jitter = T.ColorJitter(brightness, contrast, saturation, hue)
+        return jitter(input_im)
+
+    @staticmethod
+    def random_affine(input_im: Image.Image, degrees: int = 10,
+                      scale: float = 0.1, shear: float = 0.1) -> Image.Image:
+        affine = T.RandomAffine(degrees=degrees, translate=None, scale=[1 - scale, 1 + scale],
+                                shear=shear, resample=False, fillcolor=0)
+        return affine(input_im)
