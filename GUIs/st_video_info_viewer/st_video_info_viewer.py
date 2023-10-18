@@ -24,8 +24,9 @@ class VideoInfoViewer:
         uploaded_video = st.file_uploader("Upload Video File", type=["mp4", "avi"])
 
         if uploaded_video:
-            placeholder = st.empty()
             default_val = st.session_state['start_time']
+            st.write(default_val)
+            placeholder = st.empty()
             placeholder.video(uploaded_video, start_time=default_val)
 
             st.button("Jump", on_click=self.set_video_time, args=(100,))
