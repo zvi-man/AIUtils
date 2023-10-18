@@ -7,42 +7,33 @@ import tempfile
 # Constants
 CSV_VIDEO_TIME = "start_frame"
 
-# Function to read CSV file
-def read_csv(file):
-    df = pd.read_csv(file)
-    return df
+
+def read_csv(file_path: str) -> pd.DataFrame:
+    return pd.read_csv(file_path)
 
 
-# Function to display video and object information
-def display_video_with_info(video_file, csv_file):
-
-    video_capture = cv2.VideoCapture(video_file.name)
-
-    csv_data = read_csv(csv_file)
-
-    st.video(video_file)
+def plot_special_table(df: pd.DataFrame) -> None:
+    st.write(df)
 
 
-    time_slider = st.slider("Select Time in Video (seconds)", 0,
-                            int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT) / video_capture.get(cv2.CAP_PROP_FPS), 1))
-
-    # Find the object info at the selected time
-    object_info = csv_data[(csv_data['Time_in_video'] <= time_slider) & (
-                (csv_data['Time_in_video'] + csv_data['Duration']) >= time_slider)]
-
-    if not object_info.empty:
-        # Display CSV data as a table
-        st.table(object_info)
-    else:
-        st.write("No object information available for the selected time.")
+def set_video_time(time: int):
+    st.session_state['start_time'] = time
 
 
-# Streamlit UI
+if 'start_time' not in st.session_state:
+    st.session_state['start_time'] = 5
+
 st.title("Video and Object Info Viewer")
 
 uploaded_video = st.file_uploader("Upload Video File", type=["mp4", "avi"])
+
+
 if uploaded_video:
-    st.video(uploaded_video)
+    placeholder = st.empty()
+    default_val = st.session_state['start_time']
+    placeholder.video(uploaded_video, start_time=default_val)
+
+    st.button("Jump", on_click=set_video_time, args=(100, ))
 
     uploaded_csv = st.file_uploader("Upload CSV File", type=['csv'])
     if uploaded_csv:
@@ -51,10 +42,11 @@ if uploaded_video:
 
         with table_view:
             st.header("Object Information")
-            st.write(df, width=800)
+            st.write(df)
 
         with table_control:
             st.header("Table Control")
+            plot_special_table(df)
 
         with image_view:
             st.header("Image View")
