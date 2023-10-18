@@ -144,3 +144,5 @@ GeneralUtils/runs
 *.weights
 
 *.jpeg
+
+GUIs/st_video_info_viewer/DATA/
