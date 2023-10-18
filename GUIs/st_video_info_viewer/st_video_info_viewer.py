@@ -3,9 +3,29 @@ import pandas as pd
 import cv2
 import numpy as np
 import tempfile
+import os
 
 # Constants
-CSV_VIDEO_TIME_COL = "start_time"
+VIDEO_TIME_COL = "start_time"
+IMAGE_PATH_COL = "img_path"
+
+
+class VideoInfoViewerBackEnd(object):
+    DATA_PATH = "/home/zvi/Projects/LPRIL/KMUtils/GUIs/st_video_info_viewer/DATA"
+    CSV_NAME = "data.csv"
+    VIDEO_NAME = "video.mp4"
+
+    @classmethod
+    def get_all_dirs(cls):
+        return os.listdir(cls.DATA_PATH)
+
+    @classmethod
+    def get_video_path(cls, video: str) -> str:
+        return os.path.join(cls.DATA_PATH, video, cls.VIDEO_NAME)
+
+    @classmethod
+    def get_csv_path(cls, video: str) -> str:
+        return os.path.join(cls.DATA_PATH, video, cls.CSV_NAME)
 
 
 class VideoInfoViewer:
@@ -20,32 +40,27 @@ class VideoInfoViewer:
 
     def init_main_window(self):
         st.title("Video and Object Info Viewer")
+        video = st.selectbox("Select Video", VideoInfoViewerBackEnd.get_all_dirs())
 
-        uploaded_video = st.file_uploader("Upload Video File", type=["mp4", "avi"])
+        default_val = st.session_state['start_time']
+        placeholder = st.empty()
+        placeholder.video(VideoInfoViewerBackEnd.get_video_path(video), start_time=default_val)
+        num = st.number_input("set video time sec", value=default_val, step=1, key="num_in1")
+        st.button("Jump", on_click=self.set_video_time, args=(num,), key="but1")
 
-        if uploaded_video:
-            default_val = st.session_state['start_time']
-            st.write(default_val)
-            placeholder = st.empty()
-            placeholder.video(uploaded_video, start_time=default_val)
+        df = self.read_csv(VideoInfoViewerBackEnd.get_csv_path(video))
+        table_view, table_control, image_view = st.tabs(["Table View", "Table Control", "Image View"])
 
-            st.button("Jump", on_click=self.set_video_time, args=(100,))
+        with table_view:
+            st.header("Object Information")
+            st.write(df)
 
-            uploaded_csv = st.file_uploader("Upload CSV File", type=['csv'])
-            if uploaded_csv:
-                df = self.read_csv(uploaded_csv)
-                table_view, table_control, image_view = st.tabs(["Table View", "Table Control", "Image View"])
+        with table_control:
+            st.header("Table Control")
+            self.plot_special_table(df)
 
-                with table_view:
-                    st.header("Object Information")
-                    st.write(df)
-
-                with table_control:
-                    st.header("Table Control")
-                    self.plot_special_table(df)
-
-                with image_view:
-                    st.header("Image View")
+        with image_view:
+            st.header("Image View")
 
     def plot_special_table(self, df: pd.DataFrame) -> None:
         columns = st.columns(len(df.columns))
@@ -57,9 +72,9 @@ class VideoInfoViewer:
         for row_num, row in df.iterrows():
             columns = st.columns(len(df.columns))
             for i, (col_name, val) in enumerate(row.iteritems()):
-                if col_name == CSV_VIDEO_TIME_COL:
+                if col_name == VIDEO_TIME_COL:
                     button_hold = columns[i].empty()
-                    button_hold.button(f"{val}", on_click=self.set_video_time, args=(val, ))
+                    button_hold.button(f"{val}", on_click=self.set_video_time, args=(val, ), key="but2")
                 else:
                     columns[i].write(val)
 
