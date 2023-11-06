@@ -56,7 +56,8 @@ class EvaluationUtils(object):
     @classmethod
     def tracklet_precision_recall(cls, df: pd.DataFrame, tracklet_col: str,
                                   score_col: str, correct_tracklet: str,
-                                  agg_type: str, plot_pr_curve: bool = False) -> Tuple[List[float], List[float], List[float]]:
+                                  agg_type: str = 'max', plot_pr_curve: bool = False) -> Tuple[
+        List[float], List[float], List[float]]:
         df_tracklet = cls.agg_by_tracklet_top_score(df, tracklet_col, score_col, agg_type)
         p, r, t = precision_recall_curve(df_tracklet[tracklet_col] == correct_tracklet, df_tracklet[score_col])
         if plot_pr_curve:
@@ -78,7 +79,7 @@ class EvaluationUtils(object):
     def agg_by_tracklet_top_score(df: pd.DataFrame, tracklet_col: str,
                                   score_col: str, agg_type: str = 'max') -> pd.DataFrame:
         idx = df.groupby([tracklet_col])[score_col].transform(agg_type) == df['score']
-        return df[idx]
+        return df[idx].reset_index()
 
 
 # Code to evaluate "eval_model" func
