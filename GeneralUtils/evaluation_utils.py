@@ -1,9 +1,13 @@
-from typing import Callable, Set, Tuple
+from typing import Callable, Set, Tuple, List, Union
+
+import numpy as np
 import torch
+from matplotlib import pyplot as plt
 from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
-from torch.utils.data.dataset import T_co
 import torch.nn.functional as F
+import pandas as pd
+from sklearn.metrics import precision_recall_curve, PrecisionRecallDisplay
 
 from KMUtils.GeneralUtils.dataset_utils import DatasetUtils
 from KMUtils.GeneralUtils.lp_utils import LPUtils
@@ -48,6 +52,34 @@ class EvaluationUtils(object):
                 tracklet_success_counter += 1
 
         return tracklet_success_counter / len(labeled_tracklet_ids_set)
+
+    @classmethod
+    def tracklet_precision_recall(cls, df: pd.DataFrame, tracklet_col: str,
+                                  score_col: str, correct_tracklet: str,
+                                  agg_type: str = 'max', plot_pr_curve: bool = False) -> Tuple[
+        List[float], List[float], List[float]]:
+        df_tracklet = cls.agg_by_tracklet_top_score(df, tracklet_col, score_col, agg_type)
+        p, r, t = precision_recall_curve(df_tracklet[tracklet_col] == correct_tracklet, df_tracklet[score_col])
+        if plot_pr_curve:
+            _, ax = plt.subplots(figsize=(7, 8))
+            disp = PrecisionRecallDisplay(precision=p, recall=r)
+            disp.plot(ax=ax, name="TestPlot2")
+            ax.set_xlim([-0.1, 1.05])
+            ax.set_ylim([-0.1, 1.05])
+            plt.show()
+        return p, r, t
+
+    @staticmethod
+    def add_pr_curve_to_plot(precision: Union[np.ndarray, List], recall: Union[np.ndarray, List],
+                             ax, name: str = '') -> None:
+        disp = PrecisionRecallDisplay(precision=precision, recall=recall)
+        disp.plot(ax=ax, name=name)
+
+    @staticmethod
+    def agg_by_tracklet_top_score(df: pd.DataFrame, tracklet_col: str,
+                                  score_col: str, agg_type: str = 'max') -> pd.DataFrame:
+        idx = df.groupby([tracklet_col])[score_col].transform(agg_type) == df['score']
+        return df[idx].reset_index()
 
 
 # Code to evaluate "eval_model" func
@@ -95,7 +127,7 @@ def combine_outputs(output1: torch.Tensor, output2: torch.Tensor) -> torch.Tenso
     return output1_padded + output2
 
 
-if __name__ == '__main__':
+def eval_model_example():
     random_dataset = RandomDataSet()
     first_model = Model1()
     second_model = Model2()
@@ -104,3 +136,29 @@ if __name__ == '__main__':
                                           accuracy_func=label_accuracy,
                                           batch_size=32, device=torch.device('cpu'))
     print(f"final accuracy of 'eval_model' {accuracy}")
+
+
+def precision_recall_example():
+    _, ax = plt.subplots(figsize=(7, 8))
+    df = pd.DataFrame({'y_true': ['a', 'a', 'b', 'b'], 'score': [0, 1, 0, 1]})
+    p, r, t = EvaluationUtils.tracklet_precision_recall(df, "y_true", "score", 'a',
+                                                        agg_type='max')
+    EvaluationUtils.add_pr_curve_to_plot(p, r, ax, "Test1")
+    print(f"Precision: {p}")
+    print(f"Recall: {r}")
+    print(f"Threshholds: {t}")
+    df = pd.DataFrame({'y_true': ['a', 'a', 'b', 'b'], 'score': [0.6, 0.8, 0.7, 0.1]})
+    p, r, t = EvaluationUtils.tracklet_precision_recall(df, "y_true", "score", 'a',
+                                                        agg_type='max')
+    EvaluationUtils.add_pr_curve_to_plot(p, r, ax, "Test2")
+    print(f"Precision: {p}")
+    print(f"Recall: {r}")
+    print(f"Threshholds: {t}")
+    ax.set_xlim([-0.1, 1.05])
+    ax.set_ylim([-0.1, 1.05])
+    plt.show()
+
+
+if __name__ == '__main__':
+    precision_recall_example()
+    # eval_model_example()
