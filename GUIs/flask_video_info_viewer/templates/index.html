@@ -4,13 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Select Video</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <h1>Select a Video to Play</h1>
-    <ul>
-        {% for video in video_files %}
-            <li><a href="{{ url_for('view_video', video_name=video) }}">{{ video }}</a></li>
-        {% endfor %}
-    </ul>
+    <table id="data-table">
+            <thead>
+                <tr>
+                    {% for title in titles %}
+                        <th style="cursor: pointer;">{{ title }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for index, row in table.iterrows() %}
+                    <tr>
+                        {% for val in range(row.array|length) %}
+                            {% if val == video_name_col_num %}
+                                <tb>
+                                    <a href="{{ url_for('view_video', video_name=row.array[val]) }}">{{ row.array[val] }}</a>
+                                </tb>
+                            {% else %}
+                                <td>{{ row.array[val] }}</td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 </body>
 </html>

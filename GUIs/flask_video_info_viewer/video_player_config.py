@@ -4,6 +4,7 @@ class VideoPlayerConfig(object):
     CSV_NAME = "data.csv"
     START_FRAME_COL = "start_frame"
     START_TIME_COL = "start_time"
+    VIDEO_NAME_COL = "video_name"
     IMG_NAME_COL = "img_path"
     VIDEO_NAME = "video.mp4"
     VIDEO_FPS = 30

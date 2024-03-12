@@ -2,6 +2,7 @@ from flask import Flask, render_template, send_file, url_for
 import pandas as pd
 import os
 
+from KMUtils.GUIs.flask_video_info_viewer.video_manager import VideoManager
 from KMUtils.GUIs.flask_video_info_viewer.video_player_config import VideoPlayerConfig
 
 
@@ -26,7 +27,11 @@ def view_video(video_name: str):
 def index():
     video_dirs = [directory for directory in os.listdir(VideoPlayerConfig.VIDEO_DIR) if
                   os.path.isdir(os.path.join(VideoPlayerConfig.VIDEO_DIR, directory))]
-    return render_template('index.html', video_files=video_dirs)
+    video_manager = VideoManager(VideoPlayerConfig.VIDEO_DIR)
+    df = video_manager.get_video_info_df()
+    video_name_col_num = df.columns.get_loc(VideoPlayerConfig.VIDEO_NAME_COL)
+    return render_template('index.html', video_files=video_dirs, table=df,
+                           titles=df.columns.values, video_name_col_num=video_name_col_num)
 
 
 @app.route('/video/<video_dir>')
