@@ -20,6 +20,7 @@ VIDEO_DIR = r"/home/zvi/Desktop/Videos"
 CSV_NAME = "data.csv"
 START_FRAME_COL = "start_frame"
 START_TIME_COL = "start_time"
+IMG_NAME_COL = "img_path"
 VIDEO_NAME = "video.mp4"
 VIDEO_FPS = 30
 app = Flask(__name__)
@@ -39,8 +40,10 @@ def view_video(video_name: str):
     if START_TIME_COL not in df.columns.values:
         df[START_TIME_COL] = df[START_FRAME_COL] / VIDEO_FPS
     start_time_col_num = df.columns.get_loc(START_TIME_COL)
+    img_name_col_num = df.columns.get_loc(IMG_NAME_COL)
     return render_template('view_video.html', video_name=video_name,
-                           table=df, titles=df.columns.values, start_time_col_num=start_time_col_num)
+                           table=df, titles=df.columns.values, start_time_col_num=start_time_col_num,
+                           img_name_col_num=img_name_col_num)
 
 
 @app.route('/')
