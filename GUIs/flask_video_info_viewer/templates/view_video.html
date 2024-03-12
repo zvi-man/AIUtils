@@ -131,6 +131,16 @@
                 }
             }
         });
+
+        // Function to jump forward or backward by 10 seconds when left or right arrow key is pressed
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "ArrowLeft") {
+                video.currentTime -= 10; // Jump backward by 10 seconds
+            } else if (event.code === "ArrowRight") {
+                video.currentTime += 10; // Jump forward by 10 seconds
+            }
+        });
+        
     </script>
 </body>
 </html>
