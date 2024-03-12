@@ -33,20 +33,20 @@ def get_video_fps(video_path: str) -> float:
 
 
 @app.route('/play_video/<video_name>')
-def index(video_name: str):
+def view_video(video_name: str):
     csv_path = os.path.join(VIDEO_DIR, video_name, CSV_NAME)
     df = pd.read_csv(csv_path)
     if START_TIME_COL not in df.columns.values:
         df[START_TIME_COL] = df[START_FRAME_COL] / VIDEO_FPS
     start_time_col_num = df.columns.get_loc(START_TIME_COL)
-    return render_template('index.html', video_name=video_name,
+    return render_template('view_video.html', video_name=video_name,
                            table=df, titles=df.columns.values, start_time_col_num=start_time_col_num)
 
 
 @app.route('/')
-def select_video_dir():
+def index():
     video_dirs = [directory for directory in os.listdir(VIDEO_DIR) if os.path.isdir(os.path.join(VIDEO_DIR, directory))]
-    return render_template('select_video_dir.html', video_files=video_dirs)
+    return render_template('index.html', video_files=video_dirs)
 
 
 @app.route('/video/<video_dir>')
