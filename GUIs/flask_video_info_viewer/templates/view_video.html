@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f5f5f5;
+        }
+        #video-container {
+            text-align: center;
+            padding: 10px 0; /* Add padding for better appearance */
+        }
+        #video-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        video {
+            display: block;
+
+<!--            width: 100vw; /* Make video width equal to viewport width */-->
+<!--            max-width: 100%; /* Ensure video does not exceed container's width */-->
+            border: 2px solid #ccc;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="number"] {
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            width: 100px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+            text-align: center;
+        }
+        .modal img {
+            max-width: 100%;
+            max-height: 80vh;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .table-container {
+            width: 100%;
+            height: 300px; /* Set the desired height of the table */
+            overflow: auto; /* Enable vertical scrolling */
+        }
+    </style>
+</head>
+<body onload="updateProgress()">
+    <div id="video-container">
+        <h1 id="video-title">Video Viewer: {{ video_name }}</h1>
+        <video id="video" controls autoplay width="640" height="360">
+            <source src="{{ url_for('serve_video', video_dir=video_name) }}" type="video/mp4">
+        </video>
+    </div>
+    <div class="jump-to-time">
+        <label for="jump-time">Jump to time (in seconds):</label>
+        <input type="number" id="jump-time" min="0" step="1">
+        <button onclick="jumpToTime()">Go</button>
+    </div>
+    <div class="table-container">
+        <table id="data-table">
+            <thead>
+                <tr>
+                    {% for title in titles %}
+                        <th onclick="sortTable({{ loop.index - 1 }})" style="cursor: pointer;">{{ title }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for index, row in table.iterrows() %}
+                    <tr>
+                        {% for val in range(row.array|length) %}
+                            {% if val == start_time_col_num %}
+                                <td onclick="jumpTo({{ row.array[val] }})" style="color: blue; cursor: pointer;">{{ row.array[val] }}</td>
+                            {% elif val == img_name_col_num %}
+                                <td style="cursor: pointer;" onclick="showImage('{{ serve_image_url }}/{{ row.array[val] }}')">{{ row.array[val] }}</td>
+                            {% else %}
+                                <td>{{ row.array[val] }}</td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img id="modal-image" src="" alt="Image">
+        </div>
+    </div>
+    <script>
+        var video = document.getElementById("video");
+        var jumpTimeInput = document.getElementById("jump-time");
+        var modal = document.getElementById("myModal");
+        var modalImage = document.getElementById("modal-image");
+
+
+        function showImage(img_path) {
+            modalImage.src = img_path;
+            modal.style.display = "block";
+            setTimeout(function() {
+                modal.style.display = "none";
+            }, 2000); // 2000 milliseconds = 2 seconds
+        }
+
+
+        function updateProgress() {
+            var progress = document.getElementById("progress");
+            // Uncomment this line if you want to update progress bar
+            // progress.value = (video.currentTime / video.duration);
+            setTimeout(updateProgress, 500);
+        }
+
+        function jumpToTime() {
+            video.currentTime = jumpTimeInput.value;
+        }
+
+        function jumpTo(time) {
+            video.currentTime = time;
+        }
+
+        document.addEventListener("keypress", function(event) {
+            if (event.code === "Space") {
+                event.preventDefault(); // Prevent scrolling the page when pressing space
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            }
+        });
+
+        // Function to jump forward or backward by 10 seconds when left or right arrow key is pressed
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "ArrowLeft") {
+                video.currentTime -= 10; // Jump backward by 10 seconds
+            } else if (event.code === "ArrowRight") {
+                video.currentTime += 10; // Jump forward by 10 seconds
+            }
+        });
+
+        function sortTable(columnIndex) {
+            var table, rows, switching, i, x, y, shouldSwitch;
+            table = document.getElementById("data-table");
+            switching = true;
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("td")[columnIndex].innerText.toLowerCase();
+                    y = rows[i + 1].getElementsByTagName("td")[columnIndex].innerText.toLowerCase();
+                    if (x > y) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                }
+            }
+        }
+
+    </script>
+</body>
+</html>
