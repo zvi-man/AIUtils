@@ -1,8 +1,7 @@
-from flask import Flask, render_template, Response, request
+from flask import Flask, render_template, send_file
 import pandas as pd
 import cv2
 import os
-
 
 # TODO:
 #  1. Add option to search the table
@@ -16,6 +15,15 @@ import os
 #  3. Add progress bar
 #  4.
 
+# Constants
+VIDEO_DIR = r"/home/zvi/Desktop/Videos"
+CSV_NAME = "data.csv"
+START_FRAME_COL = "start_frame"
+START_TIME_COL = "start_time"
+VIDEO_NAME = "video.mp4"
+VIDEO_FPS = 30
+app = Flask(__name__)
+
 
 def get_video_fps(video_path: str) -> float:
     vid = cv2.VideoCapture(video_path)
@@ -24,44 +32,26 @@ def get_video_fps(video_path: str) -> float:
     return fps
 
 
-# Constants
-VIDEO_PATH = r"D:\עבודה צבי\VehicleColorClassification\DataSets\HomeMade1\drive_through_raanana.mp4"
-VIDEO_NAME = r"drive_through_raanana.mp4"
-VIDEO_FPS = get_video_fps(VIDEO_PATH)
-CSV_PATH = r"D:\עבודה צבי\LPRIL\KMUtils\GUIs\static\drive_through_raanana.csv"
-START_FRAME_COL = "start_frame"
-START_TIME_COL = "start_time"
-app = Flask(__name__)
-
-
-@app.route('/play_video')
-def index(video_path: str = VIDEO_NAME, csv_path: str = CSV_PATH):
+@app.route('/play_video/<video_name>')
+def index(video_name: str):
+    csv_path = os.path.join(VIDEO_DIR, video_name, CSV_NAME)
     df = pd.read_csv(csv_path)
-    df[START_TIME_COL] = df[START_FRAME_COL] / VIDEO_FPS
+    if START_TIME_COL not in df.columns.values:
+        df[START_TIME_COL] = df[START_FRAME_COL] / VIDEO_FPS
     start_time_col_num = df.columns.get_loc(START_TIME_COL)
-    return render_template('index.html', video_path=video_path,
+    return render_template('index.html', video_name=video_name,
                            table=df, titles=df.columns.values, start_time_col_num=start_time_col_num)
 
 
-app.config['UPLOAD_FOLDER'] = 'static/'
-
-
 @app.route('/')
-def upload_file():
-    return render_template('upload.html')
+def select_video_dir():
+    video_dirs = [directory for directory in os.listdir(VIDEO_DIR) if os.path.isdir(os.path.join(VIDEO_DIR, directory))]
+    return render_template('select_video_dir.html', video_files=video_dirs)
 
 
-@app.route('/uploader', methods=['GET', 'POST'])
-def uploader():
-    if request.method == 'POST':
-        f = request.files['video_path']
-        video_path = os.path.join(app.config['UPLOAD_FOLDER'], f.filename)
-        if not os.path.exists(video_path):
-            f.save(video_path)
-        f = request.files['csv_file_path']
-        csv_path = os.path.join(app.config['UPLOAD_FOLDER'], f.filename)
-        f.save(csv_path)
-        return index(video_path=video_path, csv_path=csv_path)
+@app.route('/video/<video_dir>')
+def serve_video(video_dir):
+    return send_file(os.path.join(VIDEO_DIR, video_dir, VIDEO_NAME), mimetype='video/mp4')
 
 
 if __name__ == '__main__':

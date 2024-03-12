@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Video</title>
+</head>
+<body>
+    <h1>Select a Video to Play</h1>
+    <ul>
+        {% for video in video_files %}
+            <li><a href="{{ url_for('index', video_name=video) }}">{{ video }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
