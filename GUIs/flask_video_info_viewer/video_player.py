@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_file
+from flask import Flask, render_template, send_file, url_for
 import pandas as pd
 import cv2
 import os
@@ -43,7 +43,8 @@ def view_video(video_name: str):
     img_name_col_num = df.columns.get_loc(IMG_NAME_COL)
     return render_template('view_video.html', video_name=video_name,
                            table=df, titles=df.columns.values, start_time_col_num=start_time_col_num,
-                           img_name_col_num=img_name_col_num)
+                           img_name_col_num=img_name_col_num,
+                           serve_image_url=url_for('serve_image', video_dir=video_name))
 
 
 @app.route('/')
@@ -55,6 +56,12 @@ def index():
 @app.route('/video/<video_dir>')
 def serve_video(video_dir):
     return send_file(os.path.join(VIDEO_DIR, video_dir, VIDEO_NAME), mimetype='video/mp4')
+
+
+@app.route('/image/<video_dir>')
+@app.route('/image/<video_dir>/<img_name>')
+def serve_image(video_dir: str, img_name: str = None):
+    return send_file(os.path.join(VIDEO_DIR, video_dir, img_name))
 
 
 if __name__ == '__main__':
