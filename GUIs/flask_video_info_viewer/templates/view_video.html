@@ -159,6 +159,9 @@
         function showImage(img_path) {
             modalImage.src = img_path;
             modal.style.display = "block";
+            setTimeout(function() {
+                modal.style.display = "none";
+            }, 4000); // 4000 milliseconds = 2 seconds
         }
 
 
