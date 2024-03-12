@@ -1,54 +1,101 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <style>
-      table, th, td {
-        border: 1px solid black;
-      }
-</style>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Player</title>
-    <script>
-      function updateProgress() {
-        var video = document.getElementById("video");
-        var progress = document.getElementById("progress");
-<!--        progress.value = (video.currentTime / video.duration);-->
-        setTimeout(updateProgress, 500);
-      }
-    </script>
-  </head>
-  <body onload="updateProgress()">
-    <video id="video" controls autoplay width="640" height="480">
-      <source src="{{ url_for('serve_video', video_dir=video_name) }}" type="video/mp4">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        video {
+            display: block;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="number"] {
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            width: 100px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body onload="updateProgress()">
+    <video id="video" controls autoplay width="640" height="360">
+        <source src="{{ url_for('serve_video', video_dir=video_name) }}" type="video/mp4">
     </video>
-    <br>
-  <label for="jump-time">Jump to time (in seconds):</label>
-  <input type="number" id="jump-time" min="0" step="1">
-  <button onclick="jumpToTime()">Go</button>
-  <table>
-    {% for title in titles %}
-        <th>{{ title }}</th>
-    {% endfor %}
-    {% for index, row in table.iterrows() %}
-        <tr>
-            {% for val in range(row.array|length) %}
-              {% if val == start_time_col_num %}
-                <td onclick=jumpTo({{row.array[val]}}) style="color:blue;">{{ row.array[val] }}</td>
-              {% else %}
-                <td>{{ row.array[val] }}</td>
-              {% endif %}
+    <label for="jump-time">Jump to time (in seconds):</label>
+    <input type="number" id="jump-time" min="0" step="1">
+    <button onclick="jumpToTime()">Go</button>
+    <table>
+        <thead>
+            <tr>
+                {% for title in titles %}
+                    <th>{{ title }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in table.iterrows() %}
+                <tr>
+                    {% for val in range(row.array|length) %}
+                        {% if val == start_time_col_num %}
+                            <td onclick="jumpTo({{ row.array[val] }})" style="color: blue; cursor: pointer;">{{ row.array[val] }}</td>
+                        {% else %}
+                            <td>{{ row.array[val] }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
             {% endfor %}
-        </tr>
-    {% endfor %}
-  </table>
-  <script>
-    var video = document.getElementById("video");
-    var jumpTimeInput = document.getElementById("jump-time");
-    function jumpToTime() {
-      video.currentTime = jumpTimeInput.value;
-    }
-    function jumpTo(time) {
-      video.currentTime = time;
-    }
-  </script>
-  </body>
+        </tbody>
+    </table>
+    <script>
+        var video = document.getElementById("video");
+        var jumpTimeInput = document.getElementById("jump-time");
+
+        function updateProgress() {
+            var progress = document.getElementById("progress");
+            // Uncomment this line if you want to update progress bar
+            // progress.value = (video.currentTime / video.duration);
+            setTimeout(updateProgress, 500);
+        }
+
+        function jumpToTime() {
+            video.currentTime = jumpTimeInput.value;
+        }
+
+        function jumpTo(time) {
+            video.currentTime = time;
+        }
+    </script>
+</body>
 </html>
